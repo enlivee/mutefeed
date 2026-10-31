@@ -79,3 +79,4 @@ Pipe clean RSS directly into files or scripts:
 ## License
 
 MIT
+# mutefeed
