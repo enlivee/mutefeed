@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"strings"
 	"sync"
@@ -75,6 +76,9 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("/api/test", s.handleTest)
 	mux.HandleFunc("/api/presets", s.handlePresets)
 	mux.HandleFunc("/api/stats", s.handleStats)
+	mux.HandleFunc("/badge", s.handleBadge)
+	mux.HandleFunc("/api/badge", s.handleBadge)
+	mux.HandleFunc("/badge.svg", s.handleBadge)
 
 	// Observability & Health endpoints
 	mux.HandleFunc("/healthz", s.handleHealthz)
@@ -122,15 +126,7 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse query overrides
-	if p := r.URL.Query().Get("presets"); p != "" {
-		opts.Presets = strings.Split(p, ",")
-	}
-	if kw := r.URL.Query().Get("block_kw"); kw != "" {
-		opts.BlockKeywords = append(opts.BlockKeywords, strings.Split(kw, ",")...)
-	}
-	if dom := r.URL.Query().Get("block_domains"); dom != "" {
-		opts.BlockDomains = append(opts.BlockDomains, strings.Split(dom, ",")...)
-	}
+	opts = parseFilterOptions(r, opts)
 
 	cacheKey := r.URL.RequestURI()
 
@@ -216,15 +212,7 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts := s.cfg.Defaults
-	if p := r.URL.Query().Get("presets"); p != "" {
-		opts.Presets = strings.Split(p, ",")
-	}
-	if kw := r.URL.Query().Get("block_kw"); kw != "" {
-		opts.BlockKeywords = append(opts.BlockKeywords, strings.Split(kw, ",")...)
-	}
-	if dom := r.URL.Query().Get("block_domains"); dom != "" {
-		opts.BlockDomains = append(opts.BlockDomains, strings.Split(dom, ",")...)
-	}
+	opts = parseFilterOptions(r, opts)
 
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
@@ -307,6 +295,153 @@ func (s *Server) jsonError(w http.ResponseWriter, msg string, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(map[string]string{"error": msg})
+}
+
+// handleBadge serves dynamic SVG clean badges compatible with Shields.io and GitHub
+func (s *Server) handleBadge(w http.ResponseWriter, r *http.Request) {
+	s.metrics.RecordRequest()
+
+	// Apply Rate Limiting per Client IP
+	rl := s.limiter.Allow(r)
+	rl.SetHeaders(w)
+	if !rl.Allowed {
+		s.metrics.RecordRateLimitExceeded()
+		http.Error(w, "Rate limit exceeded. Please retry later.", http.StatusTooManyRequests)
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/svg+xml; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=300")
+
+	feedURL := strings.TrimSpace(r.URL.Query().Get("url"))
+	name := strings.TrimSpace(r.URL.Query().Get("name"))
+
+	opts := s.cfg.Defaults
+	if name != "" {
+		if named, ok := s.cfg.Feeds[name]; ok {
+			feedURL = named.URL
+			opts = named.Options
+		}
+	}
+
+	if feedURL == "" {
+		svg, err := GenerateBadge("mutefeed", "clean", "#2ed573")
+		if err != nil {
+			svg = GenerateErrorBadge()
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(svg))
+		return
+	}
+
+	opts = parseFilterOptions(r, opts)
+
+	cacheKey := "badge:" + r.URL.RequestURI()
+
+	// Check Server Response Cache
+	s.cacheLock.RLock()
+	cached, found := s.cache[cacheKey]
+	s.cacheLock.RUnlock()
+
+	if found && time.Since(cached.timestamp) < s.cacheTTL {
+		s.metrics.RecordCacheHit()
+		w.Header().Set("X-Cache", "HIT")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(cached.content))
+		return
+	}
+
+	s.metrics.RecordCacheMiss()
+
+	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+	defer cancel()
+
+	parsedFeed, err := feed.FetchFeed(ctx, feedURL)
+	if err != nil {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(GenerateErrorBadge()))
+		return
+	}
+
+	engine, err := filter.NewEngine(opts)
+	if err != nil {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(GenerateErrorBadge()))
+		return
+	}
+
+	s.metrics.RecordFeedProcessed()
+	kept, decisions := engine.FilterFeed(parsedFeed)
+	for _, dec := range decisions {
+		s.metrics.RecordArticleEvaluated()
+		if !dec.Kept {
+			s.metrics.RecordArticleMuted(dec.Preset)
+		}
+	}
+
+	totalCount := len(decisions)
+	cleanCount := len(kept)
+
+	cleanPercentage := 100
+	if totalCount > 0 {
+		cleanPercentage = int(math.Round(float64(cleanCount) / float64(totalCount) * 100))
+	}
+
+	svgBadge, err := GenerateCleanBadge(cleanPercentage)
+	if err != nil {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(GenerateErrorBadge()))
+		return
+	}
+
+	// Update cache
+	s.cacheLock.Lock()
+	s.cache[cacheKey] = cachedFeed{
+		content:   svgBadge,
+		timestamp: time.Now(),
+	}
+	s.cacheLock.Unlock()
+
+	w.Header().Set("X-Cache", "MISS")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(svgBadge))
+}
+
+// parseFilterOptions parses query overrides into filter.Options
+func parseFilterOptions(r *http.Request, opts filter.Options) filter.Options {
+	q := r.URL.Query()
+
+	if p := q.Get("presets"); p != "" {
+		opts.Presets = splitAndTrim(p)
+	}
+	if kw := q.Get("block_kw"); kw != "" {
+		opts.BlockKeywords = append(opts.BlockKeywords, splitAndTrim(kw)...)
+	}
+	if dom := q.Get("block_domains"); dom != "" {
+		opts.BlockDomains = append(opts.BlockDomains, splitAndTrim(dom)...)
+	}
+
+	// Parse custom mute keywords from ?mute= and ?block=
+	for _, m := range q["mute"] {
+		opts.MuteKeywords = append(opts.MuteKeywords, splitAndTrim(m)...)
+	}
+	for _, b := range q["block"] {
+		opts.MuteKeywords = append(opts.MuteKeywords, splitAndTrim(b)...)
+	}
+
+	return opts
+}
+
+func splitAndTrim(s string) []string {
+	parts := strings.Split(s, ",")
+	var result []string
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			result = append(result, p)
+		}
+	}
+	return result
 }
 
 // Start begins listening on the configured address

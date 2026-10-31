@@ -263,3 +263,259 @@ func TestServerConcurrencyWithRace(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestBadgeEndpoint(t *testing.T) {
+	srv, upstream := setupTestServer(t)
+	handler := srv.Routes()
+
+	// 1. Badge without URL returns default badge
+	req1 := httptest.NewRequest("GET", "/badge", nil)
+	w1 := httptest.NewRecorder()
+	handler.ServeHTTP(w1, req1)
+
+	if w1.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d", w1.Code)
+	}
+	if !strings.Contains(w1.Header().Get("Content-Type"), "image/svg+xml") {
+		t.Errorf("expected SVG content type, got %s", w1.Header().Get("Content-Type"))
+	}
+	if w1.Header().Get("Cache-Control") != "public, max-age=300" {
+		t.Errorf("expected Cache-Control: public, max-age=300, got %s", w1.Header().Get("Cache-Control"))
+	}
+	if !strings.Contains(w1.Body.String(), "<svg") || !strings.Contains(w1.Body.String(), "clean") {
+		t.Errorf("expected SVG badge output, got %s", w1.Body.String())
+	}
+
+	// 2. /api/badge returns valid SVG with 200 OK and contains "clean"
+	reqAPI := httptest.NewRequest("GET", "/api/badge", nil)
+	wAPI := httptest.NewRecorder()
+	handler.ServeHTTP(wAPI, reqAPI)
+	if wAPI.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for /api/badge, got %d", wAPI.Code)
+	}
+	if !strings.Contains(wAPI.Body.String(), "<svg") || !strings.Contains(wAPI.Body.String(), "clean") {
+		t.Errorf("expected /api/badge to return valid SVG containing clean, got: %s", wAPI.Body.String())
+	}
+
+	// 3. Badge with URL and clickbait filter (1 clean, 1 muted = 50% clean) -> ruby #ff4757 (< 70%)
+	badgeURL := fmt.Sprintf("/badge?url=%s&presets=clickbait", upstream.URL)
+	req2 := httptest.NewRequest("GET", badgeURL, nil)
+	w2 := httptest.NewRecorder()
+	handler.ServeHTTP(w2, req2)
+
+	if w2.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d", w2.Code)
+	}
+	if !strings.Contains(w2.Body.String(), "50% clean") {
+		t.Errorf("expected '50%% clean' in badge, got %s", w2.Body.String())
+	}
+	if !strings.Contains(w2.Body.String(), "#ff4757") {
+		t.Errorf("expected ruby color #ff4757 for 50%% clean, got %s", w2.Body.String())
+	}
+
+	// 4. Badge with 100% clean feed -> emerald #2ed573 (>= 90%)
+	badge100URL := fmt.Sprintf("/badge?url=%s&presets=none", upstream.URL)
+	req3 := httptest.NewRequest("GET", badge100URL, nil)
+	w3 := httptest.NewRecorder()
+	handler.ServeHTTP(w3, req3)
+
+	if w3.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d", w3.Code)
+	}
+	if !strings.Contains(w3.Body.String(), "100% clean") {
+		t.Errorf("expected '100%% clean' in badge, got %s", w3.Body.String())
+	}
+	if !strings.Contains(w3.Body.String(), "#2ed573") {
+		t.Errorf("expected emerald color #2ed573 for 100%% clean, got %s", w3.Body.String())
+	}
+
+	// 5. Upstream error gracefully returns [mutefeed | error] badge with 200 OK
+	badReq := httptest.NewRequest("GET", "/badge?url=http://127.0.0.1:1/nonexistent", nil)
+	wBad := httptest.NewRecorder()
+	handler.ServeHTTP(wBad, badReq)
+
+	if wBad.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK on feed failure, got %d", wBad.Code)
+	}
+	if !strings.Contains(wBad.Header().Get("Content-Type"), "image/svg+xml") {
+		t.Errorf("expected SVG content type on error badge, got %s", wBad.Header().Get("Content-Type"))
+	}
+	if !strings.Contains(wBad.Body.String(), "<svg") || !strings.Contains(wBad.Body.String(), "error") {
+		t.Errorf("expected error badge SVG output, got %s", wBad.Body.String())
+	}
+}
+
+func TestMuteQueryParam(t *testing.T) {
+	srv, upstream := setupTestServer(t)
+	handler := srv.Routes()
+
+	// 1. Filter with &mute=Architecture -> should mute Article 1
+	testURL := fmt.Sprintf("/api/test?url=%s&mute=Architecture", upstream.URL)
+	req := httptest.NewRequest("GET", testURL, nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d", w.Code)
+	}
+
+	var resp struct {
+		Decisions []struct {
+			Kept   bool   `json:"kept"`
+			Reason string `json:"reason"`
+			Preset string `json:"preset"`
+		} `json:"decisions"`
+	}
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode JSON error: %v", err)
+	}
+
+	if len(resp.Decisions) < 2 {
+		t.Fatalf("expected at least 2 decisions, got %d", len(resp.Decisions))
+	}
+	if resp.Decisions[0].Kept {
+		t.Errorf("expected Article 1 to be muted by &mute=Architecture, but was kept")
+	}
+	if resp.Decisions[0].Reason != "matches custom mute keyword: Architecture" {
+		t.Errorf("expected reason 'matches custom mute keyword: Architecture', got %q", resp.Decisions[0].Reason)
+	}
+	if resp.Decisions[0].Preset != "custom" {
+		t.Errorf("expected preset 'custom', got %q", resp.Decisions[0].Preset)
+	}
+}
+
+func TestCustomKeywordMutingSpecialTopic(t *testing.T) {
+	const specialFeedXML = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Special Topic Test Feed</title>
+    <link>https://example.com</link>
+    <description>Test Feed</description>
+    <item>
+      <title>Breaking: Deep Dive into specialtopic Today</title>
+      <link>https://example.com/topic-item</link>
+      <description>Everything you need to know.</description>
+    </item>
+    <item>
+      <title>Exploring unspecialtopic Variants</title>
+      <link>https://example.com/unspecial</link>
+      <description>Should not match due to Unicode word boundaries.</description>
+    </item>
+    <item>
+      <title>General Software Engineering</title>
+      <link>https://example.com/clean-article</link>
+      <description>Completely unrelated clean content.</description>
+    </item>
+  </channel>
+</rss>`
+
+	specialUpstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/rss+xml")
+		w.Write([]byte(specialFeedXML))
+	}))
+	t.Cleanup(specialUpstream.Close)
+	t.Cleanup(feed.ResetHTTPClient)
+
+	feed.SetHTTPClient(specialUpstream.Client())
+	feed.DefaultFeedCache().Clear()
+
+	cfg := config.DefaultConfig()
+	srv := NewServer(cfg)
+	handler := srv.Routes()
+
+	// 1. Test /api/test?url=...&mute=specialtopic
+	testAPIURL := fmt.Sprintf("/api/test?url=%s&mute=specialtopic&presets=none", specialUpstream.URL)
+	reqAPI := httptest.NewRequest("GET", testAPIURL, nil)
+	wAPI := httptest.NewRecorder()
+	handler.ServeHTTP(wAPI, reqAPI)
+
+	if wAPI.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from /api/test, got %d: %s", wAPI.Code, wAPI.Body.String())
+	}
+
+	var apiResp struct {
+		Total     int `json:"total"`
+		Decisions []struct {
+			Item struct {
+				Title string `json:"title"`
+			} `json:"item"`
+			Kept   bool   `json:"kept"`
+			Reason string `json:"reason"`
+			Preset string `json:"preset"`
+		} `json:"decisions"`
+	}
+	if err := json.NewDecoder(wAPI.Body).Decode(&apiResp); err != nil {
+		t.Fatalf("failed to decode JSON response: %v", err)
+	}
+
+	if apiResp.Total != 3 {
+		t.Fatalf("expected 3 items, got %d", apiResp.Total)
+	}
+
+	// First item matches "specialtopic"
+	dec1 := apiResp.Decisions[0]
+	if dec1.Kept {
+		t.Errorf("expected item 1 ('specialtopic') to be muted, but Kept=true")
+	}
+	if dec1.Reason != "matches custom mute keyword: specialtopic" {
+		t.Errorf("expected Reason 'matches custom mute keyword: specialtopic', got %q", dec1.Reason)
+	}
+	if dec1.Preset != "custom" {
+		t.Errorf("expected Preset 'custom', got %q", dec1.Preset)
+	}
+
+	// Second item contains "unspecialtopic" which must NOT match due to Unicode boundaries
+	dec2 := apiResp.Decisions[1]
+	if !dec2.Kept {
+		t.Errorf("expected item 2 ('unspecialtopic') to be KEPT, but was muted: %s", dec2.Reason)
+	}
+
+	// Third item is clean
+	dec3 := apiResp.Decisions[2]
+	if !dec3.Kept {
+		t.Errorf("expected item 3 to be KEPT, but was muted: %s", dec3.Reason)
+	}
+
+	// 2. Test /feed?url=...&mute=specialtopic (returns clean RSS XML without item 1)
+	feedReqURL := fmt.Sprintf("/feed?url=%s&mute=specialtopic&presets=none", specialUpstream.URL)
+	reqFeed := httptest.NewRequest("GET", feedReqURL, nil)
+	wFeed := httptest.NewRecorder()
+	handler.ServeHTTP(wFeed, reqFeed)
+
+	if wFeed.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from /feed, got %d: %s", wFeed.Code, wFeed.Body.String())
+	}
+	feedBody := wFeed.Body.String()
+	if strings.Contains(feedBody, "Deep Dive into specialtopic Today") {
+		t.Errorf("muted specialtopic article must not be present in /feed output XML")
+	}
+	if !strings.Contains(feedBody, "General Software Engineering") {
+		t.Errorf("clean article must be present in /feed output XML")
+	}
+
+	// 3. Test ?block=specialtopic as an alias
+	blockReqURL := fmt.Sprintf("/api/test?url=%s&block=specialtopic&presets=none", specialUpstream.URL)
+	reqBlock := httptest.NewRequest("GET", blockReqURL, nil)
+	wBlock := httptest.NewRecorder()
+	handler.ServeHTTP(wBlock, reqBlock)
+
+	if wBlock.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from ?block=..., got %d", wBlock.Code)
+	}
+	var blockResp struct {
+		Decisions []struct {
+			Kept   bool   `json:"kept"`
+			Reason string `json:"reason"`
+			Preset string `json:"preset"`
+		} `json:"decisions"`
+	}
+	if err := json.NewDecoder(wBlock.Body).Decode(&blockResp); err != nil {
+		t.Fatalf("decode block JSON error: %v", err)
+	}
+	if blockResp.Decisions[0].Kept {
+		t.Errorf("expected ?block=specialtopic to mute item 1")
+	}
+	if blockResp.Decisions[0].Reason != "matches custom mute keyword: specialtopic" {
+		t.Errorf("expected Reason 'matches custom mute keyword: specialtopic', got %q", blockResp.Decisions[0].Reason)
+	}
+}

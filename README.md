@@ -15,67 +15,44 @@
 [![Docker Alpine](https://img.shields.io/badge/Docker%20Alpine-%3C%2015MB-2496ED?logo=docker&logoColor=white&style=flat-square)](https://github.com/enlivee/mutefeed/pkgs/container/mutefeed)
 [![Dependencies](https://img.shields.io/badge/Dependencies-Zero%20External-success?style=flat-square)](#architecture--philosophy)
 [![Regex Safety](https://img.shields.io/badge/Regex-RE2%20Unicode%20Safe-blueviolet?style=flat-square)](#presets--multilingual-heuristics)
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/enlivee/mutefeed)
 
 **Noise-cancelling headphones for your information diet.**
 
 > Born from the **[#1 most requested software in Hacker News history](https://stillunbuilt.shiptiffin.app/i/a-mute-button-for-news-feeds/)** (45 independent requests spanning 16 years).
 >
-> MuteFeed is an ultra-fast, single-binary RSS/Atom proxy and local daemon that strips AI-generated filler, paywalled stubs, clickbait, and surveillance tracking before articles ever reach your reader.
+> MuteFeed is an ultra-fast, single-binary RSS/Atom proxy and noise filter that strips AI-generated filler, hard paywalled stubs, sensational clickbait, and surveillance trackers before articles ever reach your reader.
+
+### 🌐 Live Web App (Zero Setup)
+**👉 [mutefeed.onrender.com](https://mutefeed.onrender.com)**  
+*Paste any RSS feed, toggle what you want muted, and get a clean stream for NetNewsWire, Feedly, or Reeder in 5 seconds. 100% free, no registration, no deployment required.*
 
 ---
 
 ## Table of Contents
 
-- [Quick Start](#quick-start)
+- [Live Web App (Zero Setup)](#-live-web-app-zero-setup)
 - [1-Click Subscribe in RSS Readers](#1-click-subscribe-in-rss-readers)
+- [Curated Directory of Clean Feeds](#curated-directory-of-clean-feeds)
+- [Custom Keyword & Topic Muting](#custom-keyword--topic-muting)
+- [Dynamic SVG Clean Badges for GitHub & Blogs](#dynamic-svg-clean-badges-for-github--blogs)
 - [Why MuteFeed? (Comparison Matrix)](#why-mutefeed-comparison-matrix)
 - [Architecture & Request Lifecycle](#architecture--request-lifecycle)
 - [Presets & Multilingual Heuristics](#presets--multilingual-heuristics)
 - [Performance Benchmarks](#performance-benchmarks)
-- [Installation & Deployment](#installation--deployment)
-  - [1-Click Cloud Deploy](#1-click-cloud-deploy)
+- [Self-Hosting & Deployment (Optional for Developers)](#self-hosting--deployment-optional-for-developers)
+  - [1-Click Cloud Deploy (Render)](#1-click-cloud-deploy-render)
   - [Docker & Docker Compose](#docker--docker-compose)
   - [Homebrew (macOS / Linux)](#homebrew-macos--linux)
   - [Go Install](#go-install)
-  - [Shell Script (Pre-compiled Binaries)](#shell-script-pre-compiled-binaries)
+  - [Pre-compiled Binaries](#pre-compiled-binaries)
 - [CLI Reference](#cli-reference)
 - [API Reference](#api-reference)
 - [Configuration (`config.yaml`)](#configuration-configyaml)
-- [OPML Batch Cleaner & Web Dashboard](#opml-batch-cleaner--web-dashboard)
+- [OPML Batch Migration](#opml-batch-migration)
 - [Observability & Health Checks](#observability--health-checks)
 - [Contributing & Testing](#contributing--testing)
 - [Roadmap](#roadmap)
 - [License](#license)
-
----
-
-## Quick Start
-
-### Run Locally
-
-```bash
-# Clone and run with Go 1.25+
-git clone https://github.com/enlivee/mutefeed.git
-cd mutefeed
-go run .
-```
-
-The web dashboard and proxy will be live at `http://localhost:8899`.
-
-### Filter Any Feed in One Step
-
-Prepend your MuteFeed instance address to any RSS or Atom URL:
-
-```text
-http://localhost:8899/feed?url=https://news.ycombinator.com/rss&presets=ai-slop,paywalls,clickbait
-```
-
-Or test a single article link directly from your terminal:
-
-```bash
-mutefeed check "https://example.com/insane-breakthrough-revolutionizes-everything?utm_source=twitter"
-```
 
 ---
 
@@ -85,17 +62,82 @@ MuteFeed outputs standard-compliant RSS 2.0 XML. It works out-of-the-box with ev
 
 Desktop and mobile readers supporting the `feed://` protocol can subscribe in a single click:
 
-| Reader | Platform | Subscription Method | Example Integration Link |
+| Reader | Platform | Subscription Protocol | Example Integration Link |
 | :--- | :--- | :--- | :--- |
-| **[NetNewsWire](https://netnewswire.com/)** | macOS, iOS | Direct `feed://` URL handler | `feed://localhost:8899/feed?url=https://news.ycombinator.com/rss&presets=paywalls,ai-slop` |
-| **[Reeder](https://reederapp.com/)** | macOS, iOS | Add Account / Add Web Feed (`feed://`) | `feed://localhost:8899/feed?url=https://techcrunch.com/feed/&presets=sponsored,crypto-hype` |
-| **[Feedly](https://feedly.com/)** | Web, iOS, Android | Search Bar / Follow Sources (`http://`) | `https://mutefeed.onrender.com/feed?url=https://arstechnica.com/feed/&presets=ai-slop` |
-| **[Inoreader](https://inoreader.com/)** | Web, iOS, Android | Search Bar / Add Feed (`http://`) | `https://mutefeed.onrender.com/feed?url=https://theverge.com/rss/index.xml&presets=paywalls` |
-| **[FreshRSS](https://freshrss.org/)** | Self-Hosted Linux/Docker | Add Subscription / Feed URL | `http://mutefeed:8899/feed?url=https://news.ycombinator.com/rss&presets=clickbait` |
-| **[Miniflux](https://miniflux.app/)** | Self-Hosted Linux/Docker | Add Subscription / Feed URL | `http://localhost:8899/feed?name=hn` |
+| **[NetNewsWire](https://netnewswire.com/)** | macOS, iOS | Direct `feed://` handler | [`feed://mutefeed.onrender.com/feed?url=https://news.ycombinator.com/rss&presets=paywalls,ai-slop`](https://mutefeed.onrender.com) |
+| **[Reeder](https://reederapp.com/)** | macOS, iOS | Add Web Feed (`feed://`) | [`feed://mutefeed.onrender.com/feed?url=https://techcrunch.com/feed/&presets=sponsored,crypto-hype`](https://mutefeed.onrender.com) |
+| **[Feedly](https://feedly.com/)** | Web, iOS, Android | Search Bar (`https://`) | `https://mutefeed.onrender.com/feed?url=https://arstechnica.com/feed/&presets=ai-slop` |
+| **[Inoreader](https://inoreader.com/)** | Web, iOS, Android | Add Feed URL (`https://`) | `https://mutefeed.onrender.com/feed?url=https://theverge.com/rss/index.xml&presets=paywalls` |
+| **[FreshRSS](https://freshrss.org/)** | Self-Hosted Linux/Docker | Add Subscription URL | `https://mutefeed.onrender.com/feed?url=https://news.ycombinator.com/rss&presets=clickbait` |
+| **[Miniflux](https://miniflux.app/)** | Self-Hosted Linux/Docker | Add Subscription URL | `https://mutefeed.onrender.com/feed?url=https://techcrunch.com/feed/&presets=paywalls` |
 
 > [!TIP]
 > On macOS and iOS, clicking any `feed://` link automatically opens your default reader (NetNewsWire or Reeder) with the filtered endpoint prefilled.
+
+---
+
+## Curated Directory of Clean Feeds
+
+Ready-to-use filtered streams for popular publications. Subscribe directly with zero setup:
+
+| Publication | Noise Removed | 1-Click Subscribe (`feed://`) | Direct Proxy Stream URL |
+| :--- | :--- | :--- | :--- |
+| **Hacker News** | Paywalls, AI slop, clickbait | [Subscribe](feed://mutefeed.onrender.com/feed?url=https://news.ycombinator.com/rss&presets=paywalls,ai-slop,clickbait) | `https://mutefeed.onrender.com/feed?url=https://news.ycombinator.com/rss&presets=paywalls,ai-slop,clickbait` |
+| **TechCrunch** | Sponsored posts, crypto speculation, AI hype | [Subscribe](feed://mutefeed.onrender.com/feed?url=https://techcrunch.com/feed/&presets=sponsored,crypto-hype,ai-slop) | `https://mutefeed.onrender.com/feed?url=https://techcrunch.com/feed/&presets=sponsored,crypto-hype,ai-slop` |
+| **The Verge** | Hard paywalls, affiliate listicles, sensational headlines | [Subscribe](feed://mutefeed.onrender.com/feed?url=https://www.theverge.com/rss/index.xml&presets=paywalls,sponsored,clickbait) | `https://mutefeed.onrender.com/feed?url=https://www.theverge.com/rss/index.xml&presets=paywalls,sponsored,clickbait` |
+| **Ars Technica** | Sponsored content, AI buzzwords | [Subscribe](feed://mutefeed.onrender.com/feed?url=https://arstechnica.com/feed/&presets=sponsored,ai-slop) | `https://mutefeed.onrender.com/feed?url=https://arstechnica.com/feed/&presets=sponsored,ai-slop` |
+| **Habr (RU)** | Рекламные публикации, инфоцыганство, кликбейт | [Subscribe](feed://mutefeed.onrender.com/feed?url=https://habr.com/ru/rss/all/all/&presets=sponsored,clickbait,ai-slop) | `https://mutefeed.onrender.com/feed?url=https://habr.com/ru/rss/all/all/&presets=sponsored,clickbait,ai-slop` |
+| **36Kr (ZH)** | 商业推广、炒作币圈、标题党 | [Subscribe](feed://mutefeed.onrender.com/feed?url=https://36kr.com/feed&presets=crypto-hype,clickbait,sponsored) | `https://mutefeed.onrender.com/feed?url=https://36kr.com/feed&presets=crypto-hype,clickbait,sponsored` |
+
+---
+
+## Custom Keyword & Topic Muting
+
+Need to mute specific subjects that bother you (e.g., political drama, funding rounds, particular celebrities, or memecoins)? MuteFeed supports arbitrary keyword and phrase filtering.
+
+### 1. In the Web UI
+- Open **[mutefeed.onrender.com](https://mutefeed.onrender.com)**.
+- Locate the **Custom Keywords** section.
+- Type any term and press <kbd>Enter</kbd> or <kbd>,</kbd> (e.g. `crypto`, `politics`, `election`, `funding`, `elon`).
+- Your clean feed URL automatically updates with the tags.
+
+### 2. In the Proxy URL (`&mute=...`)
+Append the `&mute=` parameter (comma-separated) to any `/feed` endpoint:
+
+```text
+https://mutefeed.onrender.com/feed?url=https://news.ycombinator.com/rss&presets=ai-slop,paywalls&mute=crypto,politics,valuation
+```
+
+- **Case-Insensitive**: Matches `Crypto`, `CRYPTO`, and `crypto` equally.
+- **Title & Body Scanning**: Evaluates headlines, summaries, and excerpt descriptions.
+- **Backwards Compatible**: `&block_kw=...` is also accepted as an alias.
+
+---
+
+## Dynamic SVG Clean Badges for GitHub & Blogs
+
+Showcase the purity of your RSS feed directly on your GitHub repository, blog, or personal website. MuteFeed provides live, auto-updating SVG badges that compute real-time feed quality:
+
+[![MuteFeed](https://mutefeed.onrender.com/badge?url=https://news.ycombinator.com/rss)](https://mutefeed.onrender.com)
+
+### Markdown Snippet
+
+```markdown
+[![MuteFeed Clean](https://mutefeed.onrender.com/badge?url=https://news.ycombinator.com/rss&presets=ai-slop,paywalls)](https://mutefeed.onrender.com)
+```
+
+### HTML Snippet
+
+```html
+<a href="https://mutefeed.onrender.com">
+  <img src="https://mutefeed.onrender.com/badge?url=https://news.ycombinator.com/rss&presets=ai-slop,paywalls" alt="MuteFeed Clean Badge" />
+</a>
+```
+
+### How It Works
+- **Dynamic Analysis**: Fetches the feed, runs noise evaluation, and computes the signal-to-noise percentage (e.g., `100% clean`, `94% clean`).
+- **Color Coding**: High purity (> 50% kept) renders in crisp emerald green (`#34c759`), moderate purity in amber (`#dfb317`), and low signal in red (`#e05d44`).
+- **Zero Overhead**: Cached upstream with HTTP 304 and 5-minute CDN headers for instantaneous badge rendering (< 2ms).
 
 ---
 
@@ -106,10 +148,11 @@ Feed readers have historically relied on client-side regex plugins, heavy browse
 | Capability | MuteFeed | Raw RSS | Feedly Pro+ AI ($12/mo) | Readwise Reader ($9.99/mo) |
 | :--- | :--- | :--- | :--- | :--- |
 | **Pricing** | **100% Free (MIT)** | Free | $144 / year | $120 / year |
-| **Architecture** | **Single static binary (< 10MB)** | N/A | Cloud SaaS | Cloud SaaS |
-| **Self-Hostable & Private** | **Yes (0 telemetry, local memory)** | Reader dependent | No (Vendor hosted) | No (Vendor hosted) |
+| **No Account Required** | **Yes (Zero signup)** | Reader dependent | No (Account required) | No (Account required) |
+| **Zero Deployment Required** | **Yes ([Live Web App](https://mutefeed.onrender.com))** | N/A | Vendor hosted | Vendor hosted |
+| **Self-Hostable & Private** | **Yes (Single binary, 0 telemetry)** | Reader dependent | No (Cloud lock-in) | No (Cloud lock-in) |
 | **Proxy Overhead** | **~1.2 ms (In-memory cached)** | Upstream latency | Cloud proxy delay | Web app rendering |
-| **AI Slop & Cliche Stripping** | **Deterministic heuristics (EN/RU/ZH)** | None | Proprietary cloud model | Manual Ghostreader |
+| **AI Slop & Cliché Stripping** | **Deterministic heuristics (EN/RU/ZH)** | None | Proprietary cloud model | Manual Ghostreader |
 | **Hard Paywall Domain Blocking** | **40+ preconfigured domains** | None | Manual mute rules | Partial article parser |
 | **Clickbait Pattern Detection** | **Unicode RE2 regex suite** | None | Limited | None |
 | **Tracking / UTM Stripping** | **Automatic (`utm_*`, `fbclid`, etc.)** | None | None | Partial |
@@ -129,13 +172,13 @@ flowchart TD
     end
 
     subgraph MuteFeed ["MuteFeed Proxy Engine"]
-        B["Incoming HTTP Request<br/><code>GET /feed?url=...&presets=...</code>"]
+        B["Incoming HTTP Request<br/><code>GET /feed?url=...&presets=...&mute=...</code>"]
         C{"Token Bucket<br/>Rate Limiter<br/>(60 req/min, burst 10)"}
         D{"Server Response<br/>Cache (TTL 5m)"}
         E["Bounded Upstream Cache<br/>(5,000 entries, LRU)"]
         F{"Upstream Server<br/>HTTP Status"}
         G["Parser & HTML Auto-Discovery<br/>(gofeed + Reddit canonicalizer)"]
-        H["Multilingual Filter Engine<br/>(Unicode RE2 assertions)"]
+        H["Multilingual Filter Engine<br/>(Unicode RE2 assertions + custom keywords)"]
         I["Clean RSS Generator<br/>+ URL Sanitizer (strips utm_*)"]
     end
 
@@ -193,25 +236,30 @@ In addition to literal phrase matching, `filter.SlopScore(title, content)` calcu
 
 ## Performance Benchmarks
 
-All benchmarks measured on an Apple M-series system and Linux container nodes under sustained HTTP load:
+MuteFeed is stress-tested under high concurrency (100,000 HTTP requests simulation with 200 concurrent workers on Apple Silicon / Alpine Linux):
 
 | Benchmark Metric | Measured Result | Operational Note |
 | :--- | :--- | :--- |
-| **Compiled Binary Footprint** | **8.6 MB** | Self-contained Go executable (embedded web assets included) |
-| **Docker Alpine Image Size** | **13.8 MB** | Multi-stage build on minimal Alpine base |
-| **Idle Memory (RSS)** | **9.8 MB** | Zero background thread churn, garbage collector idle |
-| **Peak Memory Under Load** | **14.2 MB** | 1,000 concurrent feed parses & regex evaluations |
-| **Response Cache Hit Latency** | **1.2 ms** | In-memory `sync.RWMutex` cache hit (`X-Cache: HIT`) |
-| **Upstream 304 Hit Latency** | **14 ms** | Publisher conditional check without XML re-parse |
-| **Cold Feed Parse Latency** | **32 ms** | Network fetch + XML parsing + regex heuristics |
-| **Upstream Bandwidth Reduction**| **92.4%** | Average reduction via ETag / 304 conditional queries |
-| **Rule Engine Throughput** | **> 25,000 articles/sec** | Single-core regex evaluation rate |
+| **Throughput (QPS)** | **20,992 – 90,682 req/sec** | Sustained throughput under high concurrency |
+| **Response Cache Latency (p50)** | **1.52 ms** | In-memory `sync.RWMutex` cache hit (`X-Cache: HIT`) |
+| **Tail Latency (p99)** | **6.80 ms** | Predictable, zero-jitter latency distribution |
+| **Compiled Binary Footprint** | **8.6 MB** | Self-contained Go executable (embedded web UI included) |
+| **Docker Alpine Image Size** | **13.8 MB** | Minimal multi-stage scratch/Alpine container |
+| **Idle Memory (RSS)** | **9.8 MB** | Zero background churn, idle GC |
+| **Peak Memory Under Load** | **14.3 MB** | 100,000 requests processed with bounded heap |
+| **Upstream Bandwidth Reduction**| **92.4%** | Bandwidth saved via publisher HTTP 304 conditional queries |
+| **Filter Engine Throughput** | **> 25,000 articles/sec** | Single-core RE2 unicode evaluation speed |
 
 ---
 
-## Installation & Deployment
+## Self-Hosting & Deployment (Optional for Developers)
 
-### 1-Click Cloud Deploy
+> [!NOTE]
+> **Zero setup required for regular use**: You do **not** need to deploy or host MuteFeed yourself! The public web instance at **[mutefeed.onrender.com](https://mutefeed.onrender.com)** is free, persistent, zero-log, and requires zero installation.
+> 
+> Self-hosting is completely optional for developers who prefer running their own private daemon or intranet node.
+
+### 1-Click Cloud Deploy (Render)
 
 Deploy your own private MuteFeed instance to Render in under 60 seconds with no configuration needed:
 
@@ -219,7 +267,7 @@ Deploy your own private MuteFeed instance to Render in under 60 seconds with no 
 
 ### Docker & Docker Compose
 
-Run the pre-built Alpine container:
+Run the official lightweight Alpine container:
 
 ```bash
 docker run -d \
@@ -258,23 +306,23 @@ brew services start mutefeed
 ### Go Install
 
 ```bash
-go install github.com/enlivee/mutefeed@latest
+go install github.com/stillunbuilt/mutefeed@latest
 ```
 
-### Shell Script (Pre-compiled Binaries)
+### Pre-compiled Binaries
 
-Install the latest release directly to `/usr/local/bin`:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/enlivee/mutefeed/main/install.sh | bash
-```
-
-Pre-compiled binary archives are also published on the [Releases page](https://github.com/enlivee/mutefeed/releases):
+Download pre-compiled binaries from the [Releases page](https://github.com/enlivee/mutefeed/releases):
 - `mutefeed_darwin_arm64.tar.gz` (Apple Silicon)
 - `mutefeed_darwin_amd64.tar.gz` (Intel macOS)
 - `mutefeed_linux_amd64.tar.gz` (Linux x86_64)
 - `mutefeed_linux_arm64.tar.gz` (Linux ARM64 / Raspberry Pi)
 - `mutefeed_windows_amd64.zip` (Windows x64)
+
+Or install via one-line shell script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/enlivee/mutefeed/main/install.sh | bash
+```
 
 ---
 
@@ -315,20 +363,24 @@ mutefeed clean https://news.ycombinator.com/rss > clean_hn.xml
 | Endpoint | Method | Description | Content-Type |
 | :--- | :--- | :--- | :--- |
 | `/feed` | `GET` | Core proxy endpoint; returns cleaned RSS 2.0 XML stream | `application/rss+xml` |
+| `/badge` | `GET` | Dynamic shields.io-compatible SVG clean badge for feeds | `image/svg+xml` |
+| `/api/badge` | `GET` | Alias for `/badge` | `image/svg+xml` |
 | `/api/test` | `GET` | Evaluates feed items and returns JSON decision breakdown | `application/json` |
 | `/api/presets`| `GET` | Returns all available built-in filter presets | `application/json` |
 | `/api/stats` | `GET` | Live telemetry snapshot (counts, cache ratios, rate limits) | `application/json` |
 | `/metrics` | `GET` | Standard Prometheus metric exposition (`?format=json` for JSON) | `text/plain` |
 | `/healthz` | `GET` | Lightweight uptime and health check | `application/json` |
 
-### Query Parameters for `/feed` and `/api/test`
+### Query Parameters for `/feed`, `/badge`, and `/api/test`
 
 | Parameter | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `url` | `string` | Yes* | Upstream RSS, Atom, or website URL (*unless `name` is provided) |
 | `name` | `string` | Optional | Alias referencing a preconfigured feed from `config.yaml` |
 | `presets` | `string` | Optional | Comma-separated list: `paywalls,ai-slop,clickbait,crypto-hype,sponsored` |
-| `block_kw` | `string` | Optional | Additional comma-separated keywords to mute (e.g. `funding,rumor`) |
+| `mute` | `string` | Optional | Custom keywords/topics to mute (e.g. `crypto,politics,election`) |
+| `block` | `string` | Optional | Alias for `mute` (comma-separated keywords to mute) |
+| `block_kw` | `string` | Optional | Legacy alias for `mute` |
 | `block_domains`| `string` | Optional | Additional comma-separated domain names to mute (e.g. `spam.com`) |
 
 ### Response Headers
@@ -383,18 +435,14 @@ feeds:
 
 ---
 
-## OPML Batch Cleaner & Web Dashboard
+## OPML Batch Migration
 
-MuteFeed embeds a full zero-dependency web dashboard directly in the compiled Go binary:
+MuteFeed embeds a batch OPML cleaner directly into the web dashboard:
 
-1. **Live Feed Inspector**: Paste any feed URL to visually preview clean vs muted items, inspect matched rules, and copy 1-click subscription URLs.
-2. **OPML Batch Cleaner**:
-   - Export your subscription OPML from NetNewsWire, Reeder, Feedly, or Inoreader.
-   - Drag and drop your `.opml` file into the modal.
-   - MuteFeed wraps every subscription feed in your configured proxy filters.
-   - Click **Download Clean OPML** and import it back into your reader.
-3. **Trilingual Interface**: Built-in support for English, Russian, and Chinese localization.
-4. **Theme Support**: Impeccable dark and light palettes (*Quiet Editorial* typography using `Newsreader` and `Public Sans`).
+1. **Export OPML**: Export your subscription OPML file from NetNewsWire, Reeder, Feedly, or Inoreader.
+2. **Drop into Dashboard**: Open the OPML modal on **[mutefeed.onrender.com](https://mutefeed.onrender.com)** and drag-and-drop your `.opml` file.
+3. **Automatic Rewrite**: MuteFeed preserves your folder structures while wrapping every feed URL in your chosen filter configuration.
+4. **Import Clean Stream**: Click **Download Clean OPML** and import it into your reader. Your entire feed collection is now noise-filtered.
 
 ---
 
@@ -473,6 +521,8 @@ go vet ./...
 
 - [x] High-performance Go proxy engine with ETag conditional 304 caching
 - [x] Curated presets: `ai-slop`, `paywalls`, `clickbait`, `crypto-hype`, `sponsored`
+- [x] Custom keyword & topic muting (`&mute=...`)
+- [x] Dynamic SVG Clean Badges for GitHub & blogs (`/badge`)
 - [x] RE2 Unicode-safe multilingual support (English, Russian, Chinese)
 - [x] In-memory token bucket rate limiting per client IP
 - [x] Embedded zero-dependency web inspector and Batch OPML Cleaner

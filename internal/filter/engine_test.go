@@ -254,3 +254,139 @@ func TestClickbaitFilter(t *testing.T) {
 		}
 	}
 }
+
+func TestCustomMuteKeywords(t *testing.T) {
+	opts := Options{
+		MuteKeywords: []string{"specialtopic", "спецтема", "crypto hype"},
+	}
+	engine, err := NewEngine(opts)
+	if err != nil {
+		t.Fatalf("failed to create engine: %v", err)
+	}
+
+	testCases := []struct {
+		name        string
+		title       string
+		desc        string
+		content     string
+		expected    bool
+		wantReason  string
+		wantPreset  string
+	}{
+		{
+			name:       "exact word match in title",
+			title:      "Discussion on specialtopic today",
+			expected:   false,
+			wantReason: "matches custom mute keyword: specialtopic",
+			wantPreset: "custom",
+		},
+		{
+			name:       "case-insensitive match",
+			title:      "SPECIALTOPIC: Key Findings",
+			expected:   false,
+			wantReason: "matches custom mute keyword: specialtopic",
+			wantPreset: "custom",
+		},
+		{
+			name:       "match at string boundaries",
+			title:      "specialtopic",
+			expected:   false,
+			wantReason: "matches custom mute keyword: specialtopic",
+			wantPreset: "custom",
+		},
+		{
+			name:       "match with surrounding punctuation",
+			title:      "Important news (specialtopic)!",
+			expected:   false,
+			wantReason: "matches custom mute keyword: specialtopic",
+			wantPreset: "custom",
+		},
+		{
+			name:       "multi-word custom mute keyword",
+			title:      "The whole truth about crypto hype and markets",
+			expected:   false,
+			wantReason: "matches custom mute keyword: crypto hype",
+			wantPreset: "custom",
+		},
+		{
+			name:       "cyrillic unicode boundary match",
+			title:      "Срочно: спецтема сегодняшнего дня",
+			expected:   false,
+			wantReason: "matches custom mute keyword: спецтема",
+			wantPreset: "custom",
+		},
+		{
+			name:       "match in description",
+			title:      "Clean Title",
+			desc:       "This description discusses specialtopic in depth",
+			expected:   false,
+			wantReason: "matches custom mute keyword: specialtopic",
+			wantPreset: "custom",
+		},
+		{
+			name:       "match in content HTML",
+			title:      "Clean Title",
+			desc:       "Clean Description",
+			content:    "<p>Deep dive into specialtopic</p>",
+			expected:   false,
+			wantReason: "matches custom mute keyword: specialtopic",
+			wantPreset: "custom",
+		},
+		{
+			name:     "word boundary: prefix does not match",
+			title:    "Unspecialtopic exploration",
+			expected: true,
+		},
+		{
+			name:     "word boundary: suffix does not match",
+			title:    "Many specialtopics in discussion",
+			expected: true,
+		},
+		{
+			name:     "cyrillic word boundary: prefix does not match",
+			title:    "Это неспецтема вовсе",
+			expected: true,
+		},
+		{
+			name:     "clean item without keywords",
+			title:    "Standard Go Architecture",
+			desc:     "Clean programming patterns",
+			expected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			item := &gofeed.Item{
+				Title:       tc.title,
+				Description: tc.desc,
+				Content:     tc.content,
+				Link:        "https://example.com/item",
+			}
+			dec := engine.Evaluate(item)
+			if dec.Kept != tc.expected {
+				t.Fatalf("expected kept=%v, got %v (reason: %q)", tc.expected, dec.Kept, dec.Reason)
+			}
+			if !tc.expected {
+				if dec.Reason != tc.wantReason {
+					t.Errorf("expected reason %q, got %q", tc.wantReason, dec.Reason)
+				}
+				if dec.Preset != tc.wantPreset {
+					t.Errorf("expected preset %q, got %q", tc.wantPreset, dec.Preset)
+				}
+			}
+		})
+	}
+
+	// Test AddMuteKeyword dynamically
+	if err := engine.AddMuteKeyword("dynamictopic"); err != nil {
+		t.Fatalf("AddMuteKeyword failed: %v", err)
+	}
+	dec := engine.Evaluate(&gofeed.Item{Title: "Article on dynamictopic"})
+	if dec.Kept {
+		t.Errorf("expected dynamically added mute keyword to mute item")
+	}
+	if dec.Reason != "matches custom mute keyword: dynamictopic" {
+		t.Errorf("expected reason 'matches custom mute keyword: dynamictopic', got %q", dec.Reason)
+	}
+}

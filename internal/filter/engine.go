@@ -14,6 +14,7 @@ type Options struct {
 	Presets       []string `json:"presets" yaml:"presets"`
 	BlockDomains  []string `json:"block_domains" yaml:"block_domains"`
 	BlockKeywords []string `json:"block_keywords" yaml:"block_keywords"`
+	MuteKeywords  []string `json:"mute_keywords" yaml:"mute_keywords"`
 	AllowKeywords []string `json:"allow_keywords" yaml:"allow_keywords"`
 	BlockRegexes  []string `json:"block_regexes" yaml:"block_regexes"`
 	FilterSlop    bool     `json:"filter_slop" yaml:"filter_slop"`
@@ -52,6 +53,11 @@ type regexRule struct {
 	preset string
 }
 
+type muteRule struct {
+	keyword string
+	re      *regexp.Regexp
+}
+
 // Engine executes filtering rules
 type Engine struct {
 	opts         Options
@@ -59,6 +65,7 @@ type Engine struct {
 	keywords     []keywordRule
 	allowWords   []string
 	regexes      []regexRule
+	muteRules    []muteRule
 }
 
 // NewEngine initializes a filter engine
@@ -133,11 +140,40 @@ func NewEngine(opts Options) (*Engine, error) {
 		e.regexes = append(e.regexes, regexRule{re: re, preset: "custom"})
 	}
 
+	// 6. Custom Mute Keywords (Unicode-safe boundary regex rules)
+	for _, kw := range opts.MuteKeywords {
+		kw = strings.TrimSpace(kw)
+		if kw == "" {
+			continue
+		}
+		pattern := fmt.Sprintf(`(?i)(?:^|[^\p{L}\p{N}])%s(?:[^\p{L}\p{N}]|$)`, regexp.QuoteMeta(kw))
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			return nil, fmt.Errorf("invalid mute keyword regex %q: %w", kw, err)
+		}
+		e.muteRules = append(e.muteRules, muteRule{keyword: kw, re: re})
+	}
+
 	if e.opts.SlopThreshold <= 0 {
 		e.opts.SlopThreshold = 0.5
 	}
 
 	return e, nil
+}
+
+// AddMuteKeyword dynamically compiles and registers a Unicode-safe case-insensitive mute keyword rule
+func (e *Engine) AddMuteKeyword(kw string) error {
+	kw = strings.TrimSpace(kw)
+	if kw == "" {
+		return nil
+	}
+	pattern := fmt.Sprintf(`(?i)(?:^|[^\p{L}\p{N}])%s(?:[^\p{L}\p{N}]|$)`, regexp.QuoteMeta(kw))
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return fmt.Errorf("invalid mute keyword regex %q: %w", kw, err)
+	}
+	e.muteRules = append(e.muteRules, muteRule{keyword: kw, re: re})
+	return nil
 }
 
 // CheckArticle evaluates a single raw link, title, and body
@@ -201,6 +237,19 @@ func (e *Engine) Evaluate(item *gofeed.Item) Decision {
 						Preset:  preset,
 					}
 				}
+			}
+		}
+	}
+
+	// 2b. Check Custom Mute Keywords
+	for _, mr := range e.muteRules {
+		if mr.re.MatchString(title) || mr.re.MatchString(desc) || (content != "" && mr.re.MatchString(content)) {
+			return Decision{
+				Item:    item,
+				Kept:    false,
+				Reason:  fmt.Sprintf("matches custom mute keyword: %s", mr.keyword),
+				Details: fmt.Sprintf("Matches custom mute keyword %q", mr.keyword),
+				Preset:  "custom",
 			}
 		}
 	}

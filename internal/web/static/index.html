@@ -378,6 +378,13 @@
       background: var(--surface-hover);
     }
 
+    .chip-btn.active {
+      background: var(--surface-hover);
+      border-color: var(--border-strong);
+      color: var(--text);
+      font-weight: 600;
+    }
+
     /* Action Buttons */
     .btn-action {
       background: var(--accent);
@@ -1178,6 +1185,101 @@
       gap: 4px;
     }
 
+    /* Live Badge Modal Elements */
+    .badge-preview-plate {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .badge-preview-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .badge-preview-render {
+      display: flex;
+      align-items: center;
+    }
+
+    .badge-preview-render img {
+      height: 20px;
+      display: block;
+    }
+
+    .snippet-block {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--surface-subtle);
+    }
+
+    .snippet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .snippet-format-tag {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-snippet-copy {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+      font-family: var(--font-sans);
+    }
+
+    .btn-snippet-copy:hover {
+      color: var(--text);
+      border-color: var(--border-hover);
+      background: var(--surface-hover);
+    }
+
+    .btn-snippet-copy.copied {
+      color: var(--tag-clean-text);
+      border-color: var(--tag-clean-border);
+      background: var(--tag-clean-bg);
+    }
+
+    .snippet-code {
+      margin: 0;
+      padding: 12px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.5;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
     .modal-footer {
       display: flex;
       justify-content: flex-end;
@@ -1244,6 +1346,14 @@
           <span data-i18n="batchOpmlBtn">Batch OPML</span>
         </button>
 
+        <!-- Embed Badge Button -->
+        <button class="btn-opml-header" id="btn-open-badge-modal" type="button" aria-haspopup="dialog">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          <span data-i18n="badgeModalBtn">Embed Badge</span>
+        </button>
+
         <!-- Proxy Status Pip (Calibrated Instrument) -->
         <div class="meta-tag" title="Local-first RSS proxy engine">
           <span class="pip-online" aria-hidden="true"></span>
@@ -1273,11 +1383,14 @@
               </button>
             </div>
             
-            <div class="chips-row">
+            <div class="chips-row" role="group" aria-label="Curated Feeds">
               <span class="chips-label" data-i18n="examplesLabel">Examples:</span>
-              <button class="chip-btn" type="button" data-url="https://news.ycombinator.com/rss">Hacker News</button>
+              <button class="chip-btn active" type="button" data-url="https://news.ycombinator.com/rss">Hacker News</button>
               <button class="chip-btn" type="button" data-url="https://techcrunch.com/feed/">TechCrunch</button>
               <button class="chip-btn" type="button" data-url="https://www.theverge.com/rss/index.xml">The Verge</button>
+              <button class="chip-btn" type="button" data-url="https://habr.com/ru/rss/hubs/all/">Habr</button>
+              <button class="chip-btn" type="button" data-url="https://feeds.arstechnica.com/arstechnica/index">Ars Technica</button>
+              <button class="chip-btn" type="button" data-url="https://lobste.rs/rss">Lobste.rs</button>
             </div>
           </div>
         </div>
@@ -1350,15 +1463,15 @@
           </div>
         </div>
 
-        <!-- Custom Keywords Card (Tag Input) -->
+        <!-- Custom Mute Keywords Card -->
         <div class="settings-card">
-          <h2 class="section-title" data-i18n="customKeywords">Custom Keywords</h2>
-          <div class="tag-input-box" id="tag-box-keywords">
-            <input type="text" class="tag-inner-input" id="input-keyword-tag" placeholder="Type keyword + Enter (e.g. ai, llm)..." data-i18n-placeholder="customKeywordsPlaceholder">
+          <h2 class="section-title" data-i18n="customMuteTitle">Custom Mute Keywords</h2>
+          <div class="input-field-group">
+            <input type="text" id="input-mute-keywords" placeholder="crypto, election, gta 6..." aria-label="Custom Mute Keywords" data-i18n-placeholder="customMutePlaceholder">
+            <p class="field-hint" data-i18n="customMuteHint">
+              Silence specific topics (e.g. crypto, election, gta 6)
+            </p>
           </div>
-          <p class="field-hint" data-i18n="customKeywordsHint">
-            Press Enter or comma to add a keyword tag.
-          </p>
         </div>
 
         <!-- Custom Domains Card (Tag Input) -->
@@ -1437,6 +1550,12 @@
           </svg>
           <span id="btn-copy-text" data-i18n="copyUrl">Copy URL</span>
         </button>
+        <button class="btn-secondary" id="btn-dock-badge" type="button" aria-haspopup="dialog" title="Get embeddable badge for this feed">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          <span data-i18n="badgeModalBtn">Embed Badge</span>
+        </button>
         <a class="btn-secondary" id="btn-open-app" href="#" title="Open in NetNewsWire, Reeder, or default RSS reader">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
@@ -1503,6 +1622,67 @@
     </div>
   </div>
 
+  <!-- Embed Badge Modal -->
+  <div class="modal-overlay" id="badge-modal" role="dialog" aria-modal="true" aria-labelledby="badge-modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 class="modal-title" id="badge-modal-title" data-i18n="badgeModalTitle">Embed Live SVG Badge</h2>
+        <button class="modal-close" id="btn-close-badge" aria-label="Close dialog">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc" data-i18n="badgeModalDesc">
+          Display a live verification badge on your blog, repository, or documentation site.
+        </p>
+
+        <!-- Live Badge Preview Plate -->
+        <div class="badge-preview-plate">
+          <span class="badge-preview-label" data-i18n="badgePreviewLabel">Live Preview:</span>
+          <div class="badge-preview-render" id="badge-preview-render">
+            <img id="badge-preview-img" src="/badge?status=slop-free" alt="MuteFeed: slop-free" height="20">
+          </div>
+        </div>
+
+        <!-- Markdown Snippet Block -->
+        <div class="snippet-block">
+          <div class="snippet-header">
+            <span class="snippet-format-tag">Markdown</span>
+            <button class="btn-snippet-copy" id="btn-copy-badge-md" type="button">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span id="txt-copy-badge-md" data-i18n="copySnippet">Copy</span>
+            </button>
+          </div>
+          <pre class="snippet-code" id="snippet-code-md"><code>[![MuteFeed](https://mutefeed.onrender.com/badge?url=https%3A%2F%2Fnews.ycombinator.com%2Frss)]</code></pre>
+        </div>
+
+        <!-- HTML Snippet Block -->
+        <div class="snippet-block">
+          <div class="snippet-header">
+            <span class="snippet-format-tag">HTML</span>
+            <button class="btn-snippet-copy" id="btn-copy-badge-html" type="button">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span id="txt-copy-badge-html" data-i18n="copySnippet">Copy</span>
+            </button>
+          </div>
+          <pre class="snippet-code" id="snippet-code-html"><code>&lt;a href="https://mutefeed.onrender.com" target="_blank" rel="noopener"&gt;&lt;img src="https://mutefeed.onrender.com/badge?url=https%3A%2F%2Fnews.ycombinator.com%2Frss" alt="Cleaned with MuteFeed" height="20"&gt;&lt;/a&gt;</code></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-cancel-badge" type="button" data-i18n="opmlClose">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Internationalization Dictionary (Refined Editorial Voice)
     const i18nData = {
@@ -1524,6 +1704,15 @@
         preset_sponsored_desc: 'Disguised ads, promoted posts, affiliate marketing roundups',
         preset_crypto_name: 'Crypto & Web3 Hype',
         preset_crypto_desc: 'Memecoins, airdrops, tokenomics, NFT speculative noise',
+        customMuteTitle: 'Custom Mute Keywords',
+        customMuteHint: 'Silence specific topics (e.g. crypto, election, gta 6)',
+        customMutePlaceholder: 'crypto, election, gta 6...',
+        badgeModalBtn: 'Embed Badge',
+        badgeModalTitle: 'Embed Live SVG Badge',
+        badgeModalDesc: 'Display a live verification badge on your blog, repository, or documentation site.',
+        badgePreviewLabel: 'Live Preview:',
+        copySnippet: 'Copy',
+        snippetCopied: 'Copied!',
         customKeywords: 'Custom Keywords',
         customKeywordsPlaceholder: 'Type keyword + Enter (e.g. ai, llm)...',
         customKeywordsHint: 'Press Enter or comma to add a keyword tag.',
@@ -1577,6 +1766,15 @@
         preset_sponsored_desc: 'На правах рекламы, партнерские материалы, промо-посты',
         preset_crypto_name: 'Крипто-хайп',
         preset_crypto_desc: 'Мемкоины, аирдропы, спекулятивная токеномика, NFT',
+        customMuteTitle: 'Стоп-слова и темы',
+        customMuteHint: 'Заглушить конкретные темы (напр. crypto, election, gta 6)',
+        customMutePlaceholder: 'crypto, election, gta 6...',
+        badgeModalBtn: 'Встроить бейдж',
+        badgeModalTitle: 'Встроить живой SVG-бейдж',
+        badgeModalDesc: 'Разместите бейдж верификации в блоге, репозитории GitHub или на сайте.',
+        badgePreviewLabel: 'Предпросмотр:',
+        copySnippet: 'Копировать',
+        snippetCopied: 'Скопировано!',
         customKeywords: 'Свои стоп-слова',
         customKeywordsPlaceholder: 'Введите слово + Enter (напр. ai, gpt)...',
         customKeywordsHint: 'Нажмите Enter или запятую для добавления тега.',
@@ -1630,6 +1828,15 @@
         preset_sponsored_desc: '商业合作、推广内容、赞助文章、软文带货',
         preset_crypto_name: '加密货币与Web3炒作',
         preset_crypto_desc: '模因币、空投、代币炒作、NFT虚火',
+        customMuteTitle: '自定义静音关键词',
+        customMuteHint: '屏蔽特定话题（例如 crypto, election, gta 6）',
+        customMutePlaceholder: 'crypto, election, gta 6...',
+        badgeModalBtn: '嵌入徽章',
+        badgeModalTitle: '嵌入实时 SVG 徽章',
+        badgeModalDesc: '在您的博客、GitHub 仓库或文档网站展示实时过滤徽章。',
+        badgePreviewLabel: '实时预览：',
+        copySnippet: '复制',
+        snippetCopied: '已复制!',
         customKeywords: '自定义关键词',
         customKeywordsPlaceholder: '输入关键词 + 回车（例如 ai, gpt）...',
         customKeywordsHint: '按回车或逗号添加关键词标签。',
@@ -1672,7 +1879,7 @@
       lang: localStorage.getItem('mutefeed_lang') || (navigator.language.startsWith('ru') ? 'ru' : navigator.language.startsWith('zh') ? 'zh' : 'en'),
       feedUrl: 'https://news.ycombinator.com/rss',
       presets: ['paywalls', 'ai-slop', 'clickbait', 'sponsored'],
-      keywords: [],
+      muteKeywords: [],
       domains: [],
       activeTab: 'all',
       decisions: [],
@@ -1696,11 +1903,19 @@
     // Language buttons
     const langBtns = document.querySelectorAll('.lang-btn');
 
-    // Tag Inputs
-    const tagBoxKeywords = document.getElementById('tag-box-keywords');
-    const inputKeywordTag = document.getElementById('input-keyword-tag');
+    // Custom Mute Keywords & Blocked Domains Inputs
+    const inputMuteKeywords = document.getElementById('input-mute-keywords');
     const tagBoxDomains = document.getElementById('tag-box-domains');
     const inputDomainTag = document.getElementById('input-domain-tag');
+
+    // Badge Modal Elements
+    const badgeModal = document.getElementById('badge-modal');
+    const btnOpenBadgeModal = document.getElementById('btn-open-badge-modal');
+    const btnDockBadge = document.getElementById('btn-dock-badge');
+    const btnCloseBadge = document.getElementById('btn-close-badge');
+    const btnCancelBadge = document.getElementById('btn-cancel-badge');
+    const btnCopyBadgeMd = document.getElementById('btn-copy-badge-md');
+    const btnCopyBadgeHtml = document.getElementById('btn-copy-badge-html');
 
     // OPML Modal Elements
     const opmlModal = document.getElementById('opml-modal');
@@ -1819,17 +2034,55 @@
       return renderTags;
     }
 
-    const renderKeywords = setupTagInput(tagBoxKeywords, inputKeywordTag, 'keywords');
     const renderDomains = setupTagInput(tagBoxDomains, inputDomainTag, 'domains');
 
-    // Example Chips
-    document.querySelectorAll('.chip-btn').forEach(btn => {
+    // Custom Mute Keywords Listener
+    let muteInputDebounce = null;
+    function parseMuteWords(val) {
+      return val
+        .split(',')
+        .map(w => w.trim().toLowerCase())
+        .filter(Boolean);
+    }
+
+    if (inputMuteKeywords) {
+      inputMuteKeywords.addEventListener('input', () => {
+        state.muteKeywords = parseMuteWords(inputMuteKeywords.value);
+        updateBottomUrl();
+        clearTimeout(muteInputDebounce);
+        muteInputDebounce = setTimeout(() => {
+          fetchFeedData();
+        }, 280);
+      });
+
+      inputMuteKeywords.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          clearTimeout(muteInputDebounce);
+          fetchFeedData();
+        }
+      });
+    }
+
+    // Curated Example Chips
+    const chipBtns = document.querySelectorAll('.chip-btn');
+    chipBtns.forEach(btn => {
       btn.addEventListener('click', () => {
+        chipBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         feedUrlInput.value = btn.dataset.url;
         state.feedUrl = btn.dataset.url;
         updateBottomUrl();
         fetchFeedData();
       });
+    });
+
+    feedUrlInput.addEventListener('input', () => {
+      state.feedUrl = feedUrlInput.value.trim();
+      chipBtns.forEach(b => {
+        b.classList.toggle('active', b.dataset.url === state.feedUrl);
+      });
+      updateBottomUrl();
     });
 
     // Tabs
@@ -1852,7 +2105,7 @@
       const params = new URLSearchParams();
       params.set('url', feedUrlInput.value.trim());
       if (state.presets.length > 0) params.set('presets', state.presets.join(','));
-      if (state.keywords.length > 0) params.set('block_kw', state.keywords.join(','));
+      if (state.muteKeywords.length > 0) params.set('mute', state.muteKeywords.join(','));
       if (state.domains.length > 0) params.set('block_domains', state.domains.join(','));
 
       const cleanUrl = `${base}?${params.toString()}`;
@@ -1889,7 +2142,7 @@
       const params = new URLSearchParams();
       params.set('url', url);
       if (state.presets.length > 0) params.set('presets', state.presets.join(','));
-      if (state.keywords.length > 0) params.set('block_kw', state.keywords.join(','));
+      if (state.muteKeywords.length > 0) params.set('mute', state.muteKeywords.join(','));
       if (state.domains.length > 0) params.set('block_domains', state.domains.join(','));
 
       try {
@@ -2018,7 +2271,29 @@
           // Render Muted Item (Console Channel Strip)
           const row = document.createElement('div');
           row.className = 'muted-row';
-          const reasonLabel = dec.reason || i18nData[lang].mutedTag;
+
+          // Detect if muted by custom keyword
+          let isCustomMute = false;
+          let customMuteKw = '';
+
+          if (dec.preset === 'custom' && dec.reason === 'Blocked keyword') {
+            isCustomMute = true;
+            const m = dec.details ? dec.details.match(/Matches "([^"]+)"/) : null;
+            customMuteKw = m ? m[1] : '';
+          }
+
+          if (!customMuteKw && state.muteKeywords.length > 0) {
+            const itemText = ((dec.item && dec.item.title || '') + ' ' + (dec.item && dec.item.description || '') + ' ' + (dec.item && dec.item.content || '')).toLowerCase();
+            const matched = state.muteKeywords.find(kw => itemText.includes(kw));
+            if (matched && (!dec.kept || dec.preset === 'custom')) {
+              isCustomMute = true;
+              customMuteKw = matched;
+            }
+          }
+
+          const reasonLabel = isCustomMute
+            ? `[Custom Mute: ${customMuteKw || 'keyword'}]`
+            : (dec.reason || i18nData[lang].mutedTag);
           const detailLabel = dec.details ? ` · ${dec.details}` : '';
           
           row.innerHTML = `
@@ -2181,7 +2456,7 @@
           const params = new URLSearchParams();
           params.set('url', origUrl);
           if (presetsParam) params.set('presets', presetsParam);
-          if (state.keywords.length > 0) params.set('block_kw', state.keywords.join(','));
+          if (state.muteKeywords.length > 0) params.set('mute', state.muteKeywords.join(','));
           if (state.domains.length > 0) params.set('block_domains', state.domains.join(','));
 
           const cleanProxyUrl = `${origin}/feed?${params.toString()}`;
@@ -2203,7 +2478,98 @@
       URL.revokeObjectURL(a.href);
     });
 
+    // ==========================================
+    // Live SVG Badge Modal Implementation
+    // ==========================================
+    function openBadgeModal() {
+      const url = feedUrlInput.value.trim() || 'https://news.ycombinator.com/rss';
+      const encUrl = encodeURIComponent(url);
+      const host = window.location.origin.includes('localhost') ? 'https://mutefeed.onrender.com' : window.location.origin;
+      const badgeUrl = `${host}/badge?url=${encUrl}`;
+      const mdSnippet = `[![MuteFeed](${badgeUrl})]`;
+      const htmlSnippet = `<a href="${host}" target="_blank" rel="noopener"><img src="${badgeUrl}" alt="Cleaned with MuteFeed" height="20"></a>`;
+
+      const snippetMdEl = document.getElementById('snippet-code-md');
+      if (snippetMdEl) snippetMdEl.querySelector('code').innerText = mdSnippet;
+      const snippetHtmlEl = document.getElementById('snippet-code-html');
+      if (snippetHtmlEl) snippetHtmlEl.querySelector('code').innerText = htmlSnippet;
+      
+      const previewImg = document.getElementById('badge-preview-img');
+      if (previewImg) {
+        previewImg.src = `/badge?url=${encUrl}`;
+        previewImg.onerror = () => {
+          previewImg.src = '/badge';
+        };
+      }
+
+      badgeModal.classList.add('open');
+      const dialog = badgeModal.querySelector('.modal-dialog');
+      if (dialog) dialog.focus();
+    }
+
+    function closeBadgeModal() {
+      badgeModal.classList.remove('open');
+    }
+
+    if (btnOpenBadgeModal) btnOpenBadgeModal.addEventListener('click', openBadgeModal);
+    if (btnDockBadge) btnDockBadge.addEventListener('click', openBadgeModal);
+    if (btnCloseBadge) btnCloseBadge.addEventListener('click', closeBadgeModal);
+    if (btnCancelBadge) btnCancelBadge.addEventListener('click', closeBadgeModal);
+
+    badgeModal.addEventListener('click', (e) => {
+      if (e.target === badgeModal) closeBadgeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && badgeModal.classList.contains('open')) {
+        closeBadgeModal();
+      }
+    });
+
+    if (btnCopyBadgeMd) {
+      btnCopyBadgeMd.addEventListener('click', () => {
+        const text = document.getElementById('snippet-code-md').querySelector('code').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+          const span = document.getElementById('txt-copy-badge-md');
+          span.innerText = i18nData[state.lang].snippetCopied;
+          btnCopyBadgeMd.classList.add('copied');
+          setTimeout(() => {
+            span.innerText = i18nData[state.lang].copySnippet;
+            btnCopyBadgeMd.classList.remove('copied');
+          }, 2000);
+        });
+      });
+    }
+
+    if (btnCopyBadgeHtml) {
+      btnCopyBadgeHtml.addEventListener('click', () => {
+        const text = document.getElementById('snippet-code-html').querySelector('code').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+          const span = document.getElementById('txt-copy-badge-html');
+          span.innerText = i18nData[state.lang].snippetCopied;
+          btnCopyBadgeHtml.classList.add('copied');
+          setTimeout(() => {
+            span.innerText = i18nData[state.lang].copySnippet;
+            btnCopyBadgeHtml.classList.remove('copied');
+          }, 2000);
+        });
+      });
+    }
+
     // Initialize
+    const initialParams = new URLSearchParams(window.location.search);
+    if (initialParams.has('url')) {
+      feedUrlInput.value = initialParams.get('url');
+      state.feedUrl = initialParams.get('url');
+    }
+    if (initialParams.has('mute') && inputMuteKeywords) {
+      inputMuteKeywords.value = initialParams.get('mute');
+      state.muteKeywords = parseMuteWords(inputMuteKeywords.value);
+    }
+    chipBtns.forEach(b => {
+      b.classList.toggle('active', b.dataset.url === feedUrlInput.value.trim());
+    });
+
     setLanguage(state.lang);
     btnFetch.addEventListener('click', fetchFeedData);
     feedUrlInput.addEventListener('keydown', (e) => {
