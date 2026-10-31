@@ -53,19 +53,23 @@ func SlopScore(title, content string) (float64, []string) {
 	var matches []string
 
 	cliches := []string{
+		// English
 		"in today's fast-paced world",
 		"in this fast-paced world",
 		"testament to",
 		"a deep dive into",
 		"game-changer",
+		"game changer",
 		"paradigm shift",
 		"unleash the power",
 		"unlock the power",
 		"harness the power",
 		"delve into",
 		"delving into",
+		"delves into",
 		"beacon of",
 		"tapestry of",
+		"rich tapestry",
 		"seamlessly integrate",
 		"supercharge your",
 		"revolutionize the way",
@@ -74,9 +78,48 @@ func SlopScore(title, content string) (float64, []string) {
 		"it's important to remember",
 		"it is worth noting",
 		"it's worth noting",
+		"it is crucial to",
+		"it is paramount that",
 		"stands as a testament",
 		"embark on a journey",
 		"at the forefront of",
+		"navigating the landscape of",
+		"navigate the complexities",
+		"ever-evolving landscape",
+		"pivotal role",
+		"plays a pivotal role",
+		"fostering innovation",
+		"a myriad of",
+		"transformative power",
+		// Russian
+		"в современном быстро меняющемся мире",
+		"в этом быстро меняющемся мире",
+		"глубокое погружение в",
+		"глубокое погружение",
+		"раскрывает потенциал",
+		"раскрыть потенциал",
+		"раскрыть всю мощь",
+		"является свидетельством",
+		"кардинально меняет правила игры",
+		"в эпоху искусственного интеллекта",
+		"бесшовная интеграция",
+		"настоящий прорыв",
+		"важно помнить, что",
+		"следует отметить, что",
+		"яркий гобелен",
+		// Chinese
+		"在当今快节奏的世界中",
+		"在当今瞬息万变的世界",
+		"深度解析",
+		"深度剖析",
+		"一文读懂",
+		"重磅发布",
+		"全面赋能",
+		"开启新纪元",
+		"大模型赋能",
+		"颠覆性创新",
+		"有力证明",
+		"值得注意的是",
 	}
 
 	for _, c := range cliches {
@@ -113,14 +156,14 @@ func SlopScore(title, content string) (float64, []string) {
 }
 
 func isAllUpper(s string) bool {
-	hasLetter := false
+	hasLetters := false
 	for _, r := range s {
 		if unicode.IsLetter(r) {
-			hasLetter = true
+			hasLetters = true
 			if !unicode.IsUpper(r) {
 				return false
 			}
 		}
 	}
-	return hasLetter
+	return hasLetters
 }

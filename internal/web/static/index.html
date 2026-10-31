@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,22 +9,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Palette: "Тихая редакция" (Dark by default) */
+      /* Palette: "Quiet Editorial" (Dark by default) */
       --bg: #0E0D0C;
       --surface: #171514;
       --surface-subtle: #1F1C1B;
       --surface-hover: #262321;
       --border: #2A2623;
-      --border-focus: #E65100;
+      --border-focus: #C84408;
       
       --text: #EDE9E3;
       --text-muted: #A39D94;
       --text-faint: #78736B;
       
-      --accent: #E65100;
-      --accent-hover: #FF6600;
-      --accent-glow: rgba(230, 81, 0, 0.15);
-      --accent-contrast: #0E0D0C;
+      --accent: #C84408;
+      --accent-hover: #DE5314;
+      --accent-glow: rgba(200, 68, 8, 0.16);
+      --accent-contrast: #FFFFFF;
       
       --badge-clean-bg: #102619;
       --badge-clean-text: #4ADE80;
@@ -103,6 +103,8 @@
       padding-bottom: 24px;
       border-bottom: 1px solid var(--border);
       margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 16px;
     }
 
     .brand {
@@ -137,6 +139,66 @@
       font-size: 13px;
       color: var(--text-muted);
       letter-spacing: 0.1px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .lang-group {
+      display: inline-flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      font-family: var(--font-sans);
+    }
+
+    .lang-btn:hover {
+      color: var(--text);
+    }
+
+    .lang-btn.active {
+      background: var(--surface-subtle);
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-opml-header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--transition-fast);
+      font-family: var(--font-sans);
+    }
+
+    .btn-opml-header:hover {
+      background: var(--surface-hover);
+      border-color: var(--text-muted);
     }
 
     .meta-tag {
@@ -244,6 +306,7 @@
       border-radius: 100px;
       cursor: pointer;
       transition: all var(--transition-fast);
+      font-family: var(--font-sans);
     }
 
     .chip-btn:hover {
@@ -267,6 +330,7 @@
       gap: 8px;
       transition: background var(--transition-fast), transform var(--transition-fast);
       white-space: nowrap;
+      font-family: var(--font-sans);
     }
 
     .btn-action:hover {
@@ -299,19 +363,23 @@
       justify-content: space-between;
       gap: 14px;
       cursor: pointer;
-      transition: border-color var(--transition-fast), background var(--transition-fast);
       user-select: none;
+      transition: all var(--transition-fast);
     }
 
     .preset-card:hover {
-      background: var(--surface-hover);
+      border-color: var(--text-faint);
     }
 
     .preset-card.active {
-      border-color: rgba(230, 81, 0, 0.45);
+      border-color: var(--accent);
+      background: var(--accent-glow);
     }
 
     .preset-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
       flex: 1;
     }
 
@@ -319,48 +387,49 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 3px;
     }
 
     .preset-name {
       font-weight: 600;
       font-size: 13px;
+      color: var(--text);
     }
 
     .preset-counter {
       font-family: var(--font-mono);
       font-size: 12px;
-      font-variant-numeric: tabular-nums;
-      padding: 2px 7px;
-      border-radius: 4px;
-      background: var(--border);
-      color: var(--text-muted);
+      background: var(--surface);
+      color: var(--text-faint);
+      padding: 1px 7px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      min-width: 20px;
+      text-align: center;
     }
 
     .preset-counter.has-muted {
-      background: var(--badge-muted-bg);
       color: var(--badge-muted-text);
-      border: 1px solid var(--badge-muted-border);
+      background: var(--badge-muted-bg);
+      border-color: var(--badge-muted-border);
     }
 
     .preset-desc {
       font-size: 12px;
       color: var(--text-muted);
-      line-height: 1.45;
+      line-height: 1.4;
     }
 
-    /* Switch Component */
+    /* iOS/macOS Style Toggle Switch */
     .switch-toggle {
-      width: 38px;
+      width: 40px;
       height: 22px;
       background: var(--border);
       border-radius: 20px;
       position: relative;
-      cursor: pointer;
-      transition: background var(--transition-fast);
       flex-shrink: 0;
+      transition: background var(--transition-fast);
       border: none;
-      padding: 0;
+      cursor: pointer;
     }
 
     .switch-toggle::after {
@@ -370,9 +439,10 @@
       left: 3px;
       width: 16px;
       height: 16px;
-      background: var(--text);
+      background: #FFFFFF;
       border-radius: 50%;
       transition: transform var(--transition-fast);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
 
     .preset-card.active .switch-toggle {
@@ -380,22 +450,21 @@
     }
 
     .preset-card.active .switch-toggle::after {
-      transform: translateX(16px);
-      background: var(--accent-contrast);
+      transform: translateX(18px);
     }
 
-    /* Tag Inputs */
+    /* Tag Input Boxes */
     .tag-input-box {
-      background: var(--surface-subtle);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 8px 10px;
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      align-items: center;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
       min-height: 42px;
-      transition: border-color var(--transition-fast);
+      align-items: center;
+      cursor: text;
     }
 
     .tag-input-box:focus-within {
@@ -404,55 +473,56 @@
     }
 
     .tag-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       background: var(--surface);
       border: 1px solid var(--border);
       color: var(--text);
-      font-family: var(--font-mono);
       font-size: 12px;
+      font-family: var(--font-mono);
       padding: 3px 8px;
       border-radius: 4px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
     }
 
     .tag-remove {
-      cursor: pointer;
-      color: var(--text-faint);
-      font-size: 14px;
-      line-height: 1;
+      background: transparent;
       border: none;
-      background: none;
-      padding: 0;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      padding: 0 2px;
     }
 
     .tag-remove:hover {
-      color: var(--badge-muted-text);
+      color: var(--text);
     }
 
     .tag-inner-input {
-      border: none !important;
-      background: transparent !important;
-      padding: 4px 6px !important;
-      font-size: 13px !important;
       flex: 1;
-      min-width: 120px;
-      color: var(--text);
+      min-width: 140px;
+      background: transparent !important;
+      border: none !important;
       box-shadow: none !important;
+      padding: 4px 0 !important;
+      font-size: 13px;
+      color: var(--text);
     }
 
     .tag-inner-input:focus {
       outline: none;
     }
 
-    /* Preview Panel (Right) */
+    /* Live Feed Preview (Right) */
     .panel-preview {
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
 
-    /* Summary Bar */
     .summary-bar {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -465,21 +535,20 @@
 
     .summary-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       flex-wrap: wrap;
       gap: 12px;
     }
 
     .summary-stat-line {
-      font-size: 14px;
-      color: var(--text);
+      font-size: 13px;
+      color: var(--text-muted);
     }
 
     .summary-stat-line b {
-      font-family: var(--font-mono);
-      font-variant-numeric: tabular-nums;
-      font-size: 15px;
+      color: var(--text);
+      font-weight: 600;
     }
 
     .filter-tabs {
@@ -492,18 +561,16 @@
     }
 
     .tab-pill {
-      background: none;
+      background: transparent;
       border: none;
       color: var(--text-muted);
       font-size: 12px;
-      font-weight: 500;
-      padding: 5px 12px;
+      font-weight: 600;
+      padding: 4px 12px;
       border-radius: 4px;
       cursor: pointer;
       transition: all var(--transition-fast);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      font-family: var(--font-sans);
     }
 
     .tab-pill:hover {
@@ -513,12 +580,10 @@
     .tab-pill.active {
       background: var(--surface);
       color: var(--text);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
     }
 
-    /* Progress track */
     .progress-track {
-      width: 100%;
       height: 4px;
       background: var(--surface-subtle);
       border-radius: 100px;
@@ -527,16 +592,16 @@
 
     .progress-fill {
       height: 100%;
-      background: var(--accent);
+      background: var(--badge-muted-text);
       width: 0%;
-      transition: width 300ms cubic-bezier(0.16, 1, 0.3, 1);
+      transition: width 300ms ease;
     }
 
-    /* Feed Stream */
+    /* Feed Items Stream */
     .feed-stream {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     /* Clean Article Card */
@@ -544,22 +609,23 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      padding: 16px 18px;
-      transition: border-color var(--transition-fast), transform var(--transition-fast);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color var(--transition-fast);
     }
 
     .article-card:hover {
-      border-color: rgba(255, 255, 255, 0.16);
-      transform: translateY(-1px);
+      border-color: var(--text-faint);
     }
 
     .article-title {
-      font-size: 15px;
-      font-weight: 600;
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 500;
       color: var(--text);
       text-decoration: none;
-      display: inline-block;
-      margin-bottom: 6px;
       line-height: 1.35;
     }
 
@@ -573,16 +639,18 @@
       gap: 12px;
       font-size: 12px;
       color: var(--text-muted);
+      flex-wrap: wrap;
     }
 
     .badge-status {
+      font-family: var(--font-mono);
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 500;
       padding: 2px 8px;
       border-radius: 4px;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
     }
 
     .badge-status.clean {
@@ -730,7 +798,7 @@
     .state-desc {
       font-size: 13px;
       color: var(--text-muted);
-      max-width: 440px;
+      max-width: 460px;
       line-height: 1.5;
     }
 
@@ -741,7 +809,7 @@
       left: 0;
       right: 0;
       z-index: 100;
-      background: rgba(23, 21, 20, 0.88);
+      background: rgba(23, 21, 20, 0.90);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-top: 1px solid var(--border);
@@ -815,11 +883,159 @@
       align-items: center;
       gap: 6px;
       transition: all var(--transition-fast);
+      font-family: var(--font-sans);
     }
 
     .btn-secondary:hover {
       background: var(--surface-hover);
       border-color: var(--text-muted);
+    }
+
+    /* OPML Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(14, 13, 12, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-dialog {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 580px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      animation: modal-pop 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modal-pop {
+      from { opacity: 0; transform: scale(0.96) translateY(6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    .modal-body {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .opml-dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-subtle);
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .opml-dropzone:hover, .opml-dropzone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .opml-dropzone-icon {
+      color: var(--accent);
+    }
+
+    .opml-dropzone-text {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .opml-dropzone-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .opml-results {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .opml-summary-count {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--badge-clean-text);
+    }
+
+    .opml-feed-list {
+      max-height: 140px;
+      overflow-y: auto;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 22px;
+      border-top: 1px solid var(--border);
+      background: var(--surface-subtle);
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -844,12 +1060,31 @@
         </div>
         <div>
           <h1 class="brand-title">MuteFeed</h1>
-          <p class="brand-tagline">Quiet, clean, AI-slop-free RSS feeds</p>
+          <p class="brand-tagline" id="txt-tagline" data-i18n="tagline">Quiet, clean, AI-slop-free RSS feeds</p>
         </div>
       </a>
-      <div class="meta-tag" title="Local-first RSS proxy engine running on your Mac">
-        <span class="dot"></span>
-        <span>Local Proxy · v1.0.0</span>
+
+      <div class="header-controls">
+        <!-- Language Switcher -->
+        <div class="lang-group" role="group" aria-label="Language">
+          <button class="lang-btn" data-lang="en" type="button">EN</button>
+          <button class="lang-btn" data-lang="ru" type="button">RU</button>
+          <button class="lang-btn" data-lang="zh" type="button">中文</button>
+        </div>
+
+        <!-- OPML Batch Tool Button -->
+        <button class="btn-opml-header" id="btn-open-opml-modal" type="button" aria-haspopup="dialog">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M12 12v9m-4-4 4-4 4 4"/>
+          </svg>
+          <span data-i18n="batchOpmlBtn">Batch OPML</span>
+        </button>
+
+        <!-- Proxy Meta Badge -->
+        <div class="meta-tag" title="Local-first RSS proxy engine">
+          <span class="dot"></span>
+          <span data-i18n="proxyBadge">RSS Proxy · v1.0.0</span>
+        </div>
       </div>
     </header>
 
@@ -857,24 +1092,24 @@
     <main class="app-layout">
       
       <!-- Left Column: Settings -->
-      <section class="panel-settings" aria-label="Параметры фильтрации">
+      <section class="panel-settings" aria-label="Filter parameters">
         
         <!-- Source URL Card -->
         <div class="settings-card">
-          <div class="section-title">Источник ленты</div>
+          <div class="section-title" data-i18n="sourceSection">Feed Source</div>
           <div class="input-field-group">
             <div class="text-input-wrap">
-              <input type="text" id="feed-url" placeholder="https://news.ycombinator.com/rss" value="https://news.ycombinator.com/rss" aria-label="URL новостной RSS-ленты">
-              <button class="btn-action" id="btn-fetch" aria-label="Применить фильтры">
+              <input type="text" id="feed-url" placeholder="https://news.ycombinator.com/rss" value="https://news.ycombinator.com/rss" aria-label="Feed URL">
+              <button class="btn-action" id="btn-fetch" aria-label="Filter feed">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="5 3 19 12 5 21 5 3"/>
                 </svg>
-                <span>Filter</span>
+                <span data-i18n="filterBtn">Filter</span>
               </button>
             </div>
             
             <div class="chips-row">
-              <span style="font-size: 12px; color: var(--text-faint); align-self: center; margin-right: 2px;">Примеры:</span>
+              <span style="font-size: 12px; color: var(--text-faint); align-self: center; margin-right: 2px;" data-i18n="examplesLabel">Examples:</span>
               <button class="chip-btn" type="button" data-url="https://news.ycombinator.com/rss">Hacker News</button>
               <button class="chip-btn" type="button" data-url="https://techcrunch.com/feed/">TechCrunch</button>
               <button class="chip-btn" type="button" data-url="https://www.theverge.com/rss/index.xml">The Verge</button>
@@ -884,17 +1119,17 @@
 
         <!-- Presets Card -->
         <div class="settings-card">
-          <div class="section-title">Пресеты фильтрации</div>
+          <div class="section-title" data-i18n="presetsSection">Filter Presets</div>
           <div class="presets-stack" id="presets-container">
             
             <!-- Paywalls -->
             <div class="preset-card active" data-preset="paywalls" role="switch" aria-checked="true" tabindex="0">
               <div class="preset-info">
                 <div class="preset-header">
-                  <span class="preset-name">Block Paywalls</span>
+                  <span class="preset-name" data-i18n="preset_paywalls_name">Block Paywalls</span>
                   <span class="preset-counter" id="count-paywalls">0</span>
                 </div>
-                <div class="preset-desc">Forbes, WSJ, Bloomberg, NYT, Wired, The Information</div>
+                <div class="preset-desc" data-i18n="preset_paywalls_desc">WSJ, Bloomberg, FT, Caixin, Vedomosti, Forbes, Wired, Medium</div>
               </div>
               <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
             </div>
@@ -903,10 +1138,10 @@
             <div class="preset-card active" data-preset="ai-slop" role="switch" aria-checked="true" tabindex="0">
               <div class="preset-info">
                 <div class="preset-header">
-                  <span class="preset-name">Filter AI Slop</span>
+                  <span class="preset-name" data-i18n="preset_aislop_name">Filter AI Slop</span>
                   <span class="preset-counter" id="count-ai-slop">0</span>
                 </div>
-                <div class="preset-desc">Клише LLM, пустой корпоративный слоп, шаблонные фразы</div>
+                <div class="preset-desc" data-i18n="preset_aislop_desc">LLM boilerplate, corporate jargon, and synthetic text cliches</div>
               </div>
               <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
             </div>
@@ -915,10 +1150,10 @@
             <div class="preset-card active" data-preset="clickbait" role="switch" aria-checked="true" tabindex="0">
               <div class="preset-info">
                 <div class="preset-header">
-                  <span class="preset-name">Clickbait & Ragebait</span>
+                  <span class="preset-name" data-i18n="preset_clickbait_name">Clickbait & Ragebait</span>
                   <span class="preset-counter" id="count-clickbait">0</span>
                 </div>
-                <div class="preset-desc">«Вы не поверите», «Вот почему», капслок, манипуляции</div>
+                <div class="preset-desc" data-i18n="preset_clickbait_desc">Sensationalist titles, curiosity gaps, ALL CAPS shouting</div>
               </div>
               <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
             </div>
@@ -927,10 +1162,10 @@
             <div class="preset-card active" data-preset="sponsored" role="switch" aria-checked="true" tabindex="0">
               <div class="preset-info">
                 <div class="preset-header">
-                  <span class="preset-name">Sponsored Content</span>
+                  <span class="preset-name" data-i18n="preset_sponsored_name">Sponsored Content</span>
                   <span class="preset-counter" id="count-sponsored">0</span>
                 </div>
-                <div class="preset-desc">Нативная реклама, партнерские материалы, промо-посты</div>
+                <div class="preset-desc" data-i18n="preset_sponsored_desc">Disguised ads, promoted posts, affiliate marketing roundups</div>
               </div>
               <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
             </div>
@@ -939,10 +1174,10 @@
             <div class="preset-card" data-preset="crypto-hype" role="switch" aria-checked="false" tabindex="0">
               <div class="preset-info">
                 <div class="preset-header">
-                  <span class="preset-name">Crypto & Web3 Hype</span>
+                  <span class="preset-name" data-i18n="preset_crypto_name">Crypto & Web3 Hype</span>
                   <span class="preset-counter" id="count-crypto-hype">0</span>
                 </div>
-                <div class="preset-desc">Мемкоины, аирдропы, спекулятивная токеномика, NFT</div>
+                <div class="preset-desc" data-i18n="preset_crypto_desc">Memecoins, airdrops, tokenomics, NFT speculative noise</div>
               </div>
               <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
             </div>
@@ -952,42 +1187,48 @@
 
         <!-- Custom Keywords Card (Tag Input) -->
         <div class="settings-card">
-          <div class="section-title">Стоп-слова (Tag Input)</div>
+          <div class="section-title" data-i18n="customKeywords">Custom Keywords</div>
           <div class="tag-input-box" id="tag-box-keywords">
-            <input type="text" class="tag-inner-input" id="input-keyword-tag" placeholder="Введите слово + Enter (напр. ai, gpt)...">
+            <input type="text" class="tag-inner-input" id="input-keyword-tag" placeholder="Type keyword + Enter (e.g. ai, llm)..." data-i18n-placeholder="customKeywordsPlaceholder">
           </div>
-          <div style="font-size: 12px; color: var(--text-faint); margin-top: 6px;">
-            Нажмите Enter или запятую для добавления тега.
+          <div style="font-size: 12px; color: var(--text-faint); margin-top: 6px;" data-i18n="customKeywordsHint">
+            Press Enter or comma to add a keyword tag.
           </div>
         </div>
 
         <!-- Custom Domains Card (Tag Input) -->
         <div class="settings-card">
-          <div class="section-title">Стоп-домены (Tag Input)</div>
+          <div class="section-title" data-i18n="customDomains">Blocked Domains</div>
           <div class="tag-input-box" id="tag-box-domains">
-            <input type="text" class="tag-inner-input" id="input-domain-tag" placeholder="Введите домен + Enter (напр. medium.com)...">
+            <input type="text" class="tag-inner-input" id="input-domain-tag" placeholder="Type domain + Enter (e.g. medium.com)..." data-i18n-placeholder="customDomainsPlaceholder">
           </div>
-          <div style="font-size: 12px; color: var(--text-faint); margin-top: 6px;">
-            Статьи с этих сайтов будут заглушены независимо от пресетов.
+          <div style="font-size: 12px; color: var(--text-faint); margin-top: 6px;" data-i18n="customDomainsHint">
+            Articles from these sites will be muted regardless of presets.
           </div>
         </div>
 
       </section>
 
       <!-- Right Column: Live Feed Preview -->
-      <section class="panel-preview" aria-label="Живое превью очищенной ленты">
+      <section class="panel-preview" aria-label="Cleaned feed live preview">
         
         <!-- Summary Bar -->
         <div class="summary-bar" id="summary-bar" style="display: none;" aria-live="polite">
           <div class="summary-header">
             <div class="summary-stat-line" id="summary-stat-text">
-              Заглушено <b id="stat-muted-num">0</b> из <b id="stat-total-num">0</b> (<span id="stat-pct">0%</span> шума)
+              <!-- Dynamically rendered -->
             </div>
             
             <div class="filter-tabs" role="tablist">
-              <button class="tab-pill active" role="tab" aria-selected="true" data-tab="all">Все (<span id="tab-cnt-all">0</span>)</button>
-              <button class="tab-pill" role="tab" aria-selected="false" data-tab="clean">Чистые (<span id="tab-cnt-clean">0</span>)</button>
-              <button class="tab-pill" role="tab" aria-selected="false" data-tab="muted">Заглушенные (<span id="tab-cnt-muted">0</span>)</button>
+              <button class="tab-pill active" role="tab" aria-selected="true" data-tab="all">
+                <span data-i18n="tabAll">All</span> (<span id="tab-cnt-all">0</span>)
+              </button>
+              <button class="tab-pill" role="tab" aria-selected="false" data-tab="clean">
+                <span data-i18n="tabClean">Clean</span> (<span id="tab-cnt-clean">0</span>)
+              </button>
+              <button class="tab-pill" role="tab" aria-selected="false" data-tab="muted">
+                <span data-i18n="tabMuted">Muted</span> (<span id="tab-cnt-muted">0</span>)
+              </button>
             </div>
           </div>
 
@@ -1006,8 +1247,8 @@
                 <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
               </svg>
             </div>
-            <h2 class="state-title">Тишина в эфире</h2>
-            <p class="state-desc">Введите ссылку на RSS-ленту или кликните один из примеров выше, чтобы увидеть фильтрацию в реальном времени.</p>
+            <h2 class="state-title" data-i18n="emptyTitle">Silence on the air</h2>
+            <p class="state-desc" data-i18n="emptyDesc">Enter an RSS feed URL or click an example above to inspect live noise filtering.</p>
           </div>
         </div>
 
@@ -1020,8 +1261,8 @@
   <footer class="bottom-bar" id="bottom-bar">
     <div class="bottom-bar-inner">
       <div class="url-display-group">
-        <span class="url-label">Clean Feed URL:</span>
-        <div class="url-pill-box" id="bottom-feed-url" title="URL очищенной RSS-ленты для вставки в ваш ридер">
+        <span class="url-label" data-i18n="cleanFeedUrl">Clean Feed URL:</span>
+        <div class="url-pill-box" id="bottom-feed-url" title="Clean RSS feed URL for your reader">
           http://localhost:8899/feed?url=https://news.ycombinator.com/rss
         </div>
       </div>
@@ -1031,10 +1272,10 @@
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
           </svg>
-          <span id="btn-copy-text">Copy URL</span>
+          <span id="btn-copy-text" data-i18n="copyUrl">Copy URL</span>
         </button>
         <a class="btn-secondary" id="btn-open-reader" href="#" target="_blank" rel="noopener">
-          <span>Open feed</span>
+          <span data-i18n="openFeed">Open feed</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
             <polyline points="15 3 21 3 21 9"/>
@@ -1045,16 +1286,218 @@
     </div>
   </footer>
 
+  <!-- OPML Batch Cleaner Modal -->
+  <div class="modal-overlay" id="opml-modal" role="dialog" aria-modal="true" aria-labelledby="opml-modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="opml-modal-title" data-i18n="opmlModalTitle">Batch Clean OPML Library</h3>
+        <button class="modal-close" id="btn-close-opml" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc" data-i18n="opmlModalDesc">
+          Export your subscription OPML from NetNewsWire, Feedly, Reeder, or Inoreader. Drop it here to wrap every feed in MuteFeed filters in one click.
+        </p>
+
+        <div class="opml-dropzone" id="opml-dropzone" tabindex="0" role="button" aria-label="Select OPML file">
+          <input type="file" id="opml-file-input" accept=".opml,.xml" style="display: none;">
+          <svg class="opml-dropzone-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <div class="opml-dropzone-text" data-i18n="opmlDropzone">Drop .opml file here or click to browse</div>
+          <div class="opml-dropzone-hint" data-i18n="opmlDropzoneHint">Accepts .opml or .xml subscription files</div>
+        </div>
+
+        <div class="opml-results" id="opml-results" style="display: none;">
+          <div class="opml-summary-count" id="opml-summary-count">Found 0 feeds</div>
+          <div class="opml-feed-list" id="opml-feed-list"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-cancel-opml" type="button" data-i18n="opmlClose">Close</button>
+        <button class="btn-action" id="btn-download-opml" type="button" style="display: none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span data-i18n="opmlDownloadBtn">Download Clean OPML</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // Internationalization Dictionary
+    const i18nData = {
+      en: {
+        tagline: 'Quiet, clean, AI-slop-free RSS feeds',
+        proxyBadge: 'RSS Proxy · v1.0.0',
+        batchOpmlBtn: 'Batch OPML',
+        sourceSection: 'Feed Source',
+        filterBtn: 'Filter',
+        examplesLabel: 'Examples:',
+        presetsSection: 'Filter Presets',
+        preset_paywalls_name: 'Block Paywalls',
+        preset_paywalls_desc: 'WSJ, Bloomberg, FT, Caixin, Vedomosti, Forbes, Wired, Medium',
+        preset_aislop_name: 'Filter AI Slop',
+        preset_aislop_desc: 'LLM boilerplate, corporate jargon, and synthetic text cliches',
+        preset_clickbait_name: 'Clickbait & Ragebait',
+        preset_clickbait_desc: 'Sensationalist titles, curiosity gaps, ALL CAPS shouting',
+        preset_sponsored_name: 'Sponsored Content',
+        preset_sponsored_desc: 'Disguised ads, promoted posts, affiliate marketing roundups',
+        preset_crypto_name: 'Crypto & Web3 Hype',
+        preset_crypto_desc: 'Memecoins, airdrops, tokenomics, NFT speculative noise',
+        customKeywords: 'Custom Keywords',
+        customKeywordsPlaceholder: 'Type keyword + Enter (e.g. ai, llm)...',
+        customKeywordsHint: 'Press Enter or comma to add a keyword tag.',
+        customDomains: 'Blocked Domains',
+        customDomainsPlaceholder: 'Type domain + Enter (e.g. medium.com)...',
+        customDomainsHint: 'Articles from these sites will be muted regardless of presets.',
+        tabAll: 'All',
+        tabClean: 'Clean',
+        tabMuted: 'Muted',
+        statMuted: 'Muted <b>{muted}</b> of <b>{total}</b> ({pct}% noise)',
+        emptyTitle: 'Silence on the air',
+        emptyDesc: 'Enter an RSS feed URL or click an example above to inspect live noise filtering.',
+        noItemsTitle: 'No articles match',
+        noItemsDesc: 'Under current filter criteria, no articles were found in this view.',
+        cleanFeedUrl: 'Clean Feed URL:',
+        copyUrl: 'Copy URL',
+        copied: 'Copied!',
+        openFeed: 'Open feed',
+        errorTitle: 'Failed to load feed',
+        retry: 'Retry',
+        reasonLabel: 'Filter Reason:',
+        cleanTag: '✓ Clean',
+        mutedTag: 'Muted',
+        untitled: 'Untitled',
+        recently: 'Recently',
+        opmlModalTitle: 'Batch Clean OPML Library',
+        opmlModalDesc: 'Export your subscription OPML from NetNewsWire, Feedly, Reeder, or Inoreader. Drop it here to wrap every feed in MuteFeed filters in one click.',
+        opmlDropzone: 'Drop .opml file here or click to browse',
+        opmlDropzoneHint: 'Accepts .opml or .xml subscription files',
+        opmlFeedsFound: 'Found {count} feeds',
+        opmlDownloadBtn: 'Download Clean OPML',
+        opmlClose: 'Close'
+      },
+      ru: {
+        tagline: 'Тихие, чистые RSS-ленты без нейрослопа и кликбейта',
+        proxyBadge: 'Прокси RSS · v1.0.0',
+        batchOpmlBtn: 'Пакетный OPML',
+        sourceSection: 'Источник ленты',
+        filterBtn: 'Фильтр',
+        examplesLabel: 'Примеры:',
+        presetsSection: 'Пресеты фильтрации',
+        preset_paywalls_name: 'Блокировка пейволлов',
+        preset_paywalls_desc: 'Ведомости, РБК Pro, Forbes, WSJ, Bloomberg, Wired, Caixin',
+        preset_aislop_name: 'Фильтр AI-слопа',
+        preset_aislop_desc: 'Клише LLM, «в современном быстро меняющемся мире», пустой слоп',
+        preset_clickbait_name: 'Кликбейт и манипуляции',
+        preset_clickbait_desc: '«Вы не поверите», «Шок», «Вот почему», капслок, манипуляции',
+        preset_sponsored_name: 'Реклама и партнерки',
+        preset_sponsored_desc: 'На правах рекламы, партнерские материалы, промо-посты',
+        preset_crypto_name: 'Крипто-хайп',
+        preset_crypto_desc: 'Мемкоины, аирдропы, спекулятивная токеномика, NFT',
+        customKeywords: 'Свои стоп-слова',
+        customKeywordsPlaceholder: 'Введите слово + Enter (напр. ai, gpt)...',
+        customKeywordsHint: 'Нажмите Enter или запятую для добавления тега.',
+        customDomains: 'Стоп-домены',
+        customDomainsPlaceholder: 'Введите домен + Enter (напр. medium.com)...',
+        customDomainsHint: 'Статьи с этих сайтов будут заглушены независимо от пресетов.',
+        tabAll: 'Все',
+        tabClean: 'Чистые',
+        tabMuted: 'Заглушенные',
+        statMuted: 'Заглушено <b>{muted}</b> из <b>{total}</b> ({pct}% шума)',
+        emptyTitle: 'Тишина в эфире',
+        emptyDesc: 'Введите ссылку на RSS-ленту или кликните пример выше, чтобы увидеть фильтрацию в реальном времени.',
+        noItemsTitle: 'Здесь ничего нет',
+        noItemsDesc: 'По заданным условиям ни одна статья не попала в эту категорию.',
+        cleanFeedUrl: 'Ссылка на чистую ленту:',
+        copyUrl: 'Копировать URL',
+        copied: 'Скопировано!',
+        openFeed: 'Открыть ленту',
+        errorTitle: 'Не удалось загрузить ленту',
+        retry: 'Повторить попытку',
+        reasonLabel: 'Причина заглушения:',
+        cleanTag: '✓ Чисто',
+        mutedTag: 'Заглушено',
+        untitled: 'Без названия',
+        recently: 'Недавно',
+        opmlModalTitle: 'Пакетная очистка OPML',
+        opmlModalDesc: 'Экспортируйте OPML из вашего ридера (NetNewsWire, Feedly, Reeder, Inoreader). Перетащите файл сюда, чтобы обернуть все подписки в фильтры MuteFeed.',
+        opmlDropzone: 'Перетащите файл .opml сюда или нажмите для выбора',
+        opmlDropzoneHint: 'Поддерживаются файлы подписок .opml или .xml',
+        opmlFeedsFound: 'Найдено подписок: {count}',
+        opmlDownloadBtn: 'Скачать чистый OPML',
+        opmlClose: 'Закрыть'
+      },
+      zh: {
+        tagline: '纯净、无AI废话与标题党的安静RSS订阅源',
+        proxyBadge: 'RSS 代理 · v1.0.0',
+        batchOpmlBtn: '批量 OPML',
+        sourceSection: '订阅源地址',
+        filterBtn: '过滤',
+        examplesLabel: '示例：',
+        presetsSection: '过滤预设',
+        preset_paywalls_name: '屏蔽付费墙媒体',
+        preset_paywalls_desc: '财新、华尔街日报、彭博社、FT中文网、Forbes、Medium',
+        preset_aislop_name: '过滤 AI 生成废话',
+        preset_aislop_desc: '过滤大模型陈词滥调、一文读懂、全面赋能、快节奏时代',
+        preset_clickbait_name: '标题党与情绪煽动',
+        preset_clickbait_desc: '震惊体、万万没想到、刚刚重磅、绝密必看、情绪制造',
+        preset_sponsored_name: '赞助商与商业软文',
+        preset_sponsored_desc: '商业合作、推广内容、赞助文章、软文带货',
+        preset_crypto_name: '加密货币与Web3炒作',
+        preset_crypto_desc: '模因币、空投、代币炒作、NFT虚火',
+        customKeywords: '自定义关键词',
+        customKeywordsPlaceholder: '输入关键词 + 回车（例如 ai, gpt）...',
+        customKeywordsHint: '按回车或逗号添加关键词标签。',
+        customDomains: '自定义屏蔽域名',
+        customDomainsPlaceholder: '输入域名 + 回车（例如 medium.com）...',
+        customDomainsHint: '来自这些网站的文章将被无条件过滤。',
+        tabAll: '全部',
+        tabClean: '已通过',
+        tabMuted: '已过滤',
+        statMuted: '已过滤 <b>{muted}</b> / <b>{total}</b> 篇（{pct}% 噪音）',
+        emptyTitle: '等待信号',
+        emptyDesc: '在上方输入 RSS 链接或点击示例，即可实时查看内容过滤效果。',
+        noItemsTitle: '无符合文章',
+        noItemsDesc: '在当前过滤条件下，该视图暂无文章。',
+        cleanFeedUrl: '纯净订阅源地址：',
+        copyUrl: '复制地址',
+        copied: '已复制!',
+        openFeed: '打开订阅源',
+        errorTitle: '加载订阅源失败',
+        retry: '重试',
+        reasonLabel: '过滤原因：',
+        cleanTag: '✓ 纯净',
+        mutedTag: '已过滤',
+        untitled: '无标题',
+        recently: '刚刚',
+        opmlModalTitle: '批量清理 OPML 订阅库',
+        opmlModalDesc: '从 NetNewsWire、Feedly、Reeder 或 Inoreader 导出 OPML 文件，拖入此处即可一键为所有订阅套用 MuteFeed 纯净过滤。',
+        opmlDropzone: '拖入 .opml 文件或点击选择',
+        opmlDropzoneHint: '支持 .opml 或 .xml 格式的订阅源库文件',
+        opmlFeedsFound: '已解析到 {count} 个订阅源',
+        opmlDownloadBtn: '下载纯净 OPML',
+        opmlClose: '关闭'
+      }
+    };
+
     // State management
     const state = {
+      lang: localStorage.getItem('mutefeed_lang') || (navigator.language.startsWith('ru') ? 'ru' : navigator.language.startsWith('zh') ? 'zh' : 'en'),
       feedUrl: 'https://news.ycombinator.com/rss',
       presets: ['paywalls', 'ai-slop', 'clickbait', 'sponsored'],
       keywords: [],
       domains: [],
       activeTab: 'all',
       decisions: [],
-      isLoading: false
+      isLoading: false,
+      parsedOpmlDoc: null,
+      opmlFeedCount: 0
     };
 
     // DOM Elements
@@ -1068,11 +1511,65 @@
     const btnCopyText = document.getElementById('btn-copy-text');
     const btnOpenReader = document.getElementById('btn-open-reader');
 
+    // Language buttons
+    const langBtns = document.querySelectorAll('.lang-btn');
+
     // Tag Inputs
     const tagBoxKeywords = document.getElementById('tag-box-keywords');
     const inputKeywordTag = document.getElementById('input-keyword-tag');
     const tagBoxDomains = document.getElementById('tag-box-domains');
     const inputDomainTag = document.getElementById('input-domain-tag');
+
+    // OPML Modal Elements
+    const opmlModal = document.getElementById('opml-modal');
+    const btnOpenOpmlModal = document.getElementById('btn-open-opml-modal');
+    const btnCloseOpml = document.getElementById('btn-close-opml');
+    const btnCancelOpml = document.getElementById('btn-cancel-opml');
+    const opmlDropzone = document.getElementById('opml-dropzone');
+    const opmlFileInput = document.getElementById('opml-file-input');
+    const opmlResults = document.getElementById('opml-results');
+    const opmlSummaryCount = document.getElementById('opml-summary-count');
+    const opmlFeedList = document.getElementById('opml-feed-list');
+    const btnDownloadOpml = document.getElementById('btn-download-opml');
+
+    // Language switcher
+    function setLanguage(lang) {
+      if (!i18nData[lang]) lang = 'en';
+      state.lang = lang;
+      localStorage.setItem('mutefeed_lang', lang);
+      document.documentElement.lang = lang;
+
+      // Update button active state
+      langBtns.forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+
+      // Update all data-i18n elements
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (i18nData[lang][key]) {
+          el.innerText = i18nData[lang][key];
+        }
+      });
+
+      // Update placeholders
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.dataset.i18nPlaceholder;
+        if (i18nData[lang][key]) {
+          el.placeholder = i18nData[lang][key];
+        }
+      });
+
+      // Re-render dynamic elements
+      if (state.decisions.length > 0) {
+        updateSummaryAndCounters();
+        renderFeedList();
+      }
+    }
+
+    langBtns.forEach(btn => {
+      btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+    });
 
     // Setup Presets Toggles
     presetsContainer.querySelectorAll('.preset-card').forEach(card => {
@@ -1105,7 +1602,7 @@
         state[stateKey].forEach((tag, idx) => {
           const tagEl = document.createElement('span');
           tagEl.className = 'tag-item';
-          tagEl.innerHTML = `${escapeHtml(tag)} <button type="button" class="tag-remove" aria-label="Удалить тег">&times;</button>`;
+          tagEl.innerHTML = `${escapeHtml(tag)} <button type="button" class="tag-remove" aria-label="Remove tag">&times;</button>`;
           tagEl.querySelector('.tag-remove').addEventListener('click', (e) => {
             e.stopPropagation();
             state[stateKey].splice(idx, 1);
@@ -1184,11 +1681,12 @@
 
     // Copy Button with 2s Confirmation
     btnCopyUrl.addEventListener('click', () => {
+      const lang = state.lang;
       navigator.clipboard.writeText(bottomFeedUrl.innerText).then(() => {
-        btnCopyText.innerText = 'Copied!';
+        btnCopyText.innerText = i18nData[lang].copied;
         btnCopyUrl.style.background = '#0E6833';
         setTimeout(() => {
-          btnCopyText.innerText = 'Copy URL';
+          btnCopyText.innerText = i18nData[lang].copyUrl;
           btnCopyUrl.style.background = '';
         }, 2000);
       });
@@ -1240,6 +1738,7 @@
     }
 
     function renderError(msg) {
+      const lang = state.lang;
       summaryBar.style.display = 'none';
       feedStream.innerHTML = `
         <div class="state-banner">
@@ -1250,23 +1749,28 @@
               <line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
           </div>
-          <h2 class="state-title">Не удалось загрузить ленту</h2>
+          <h2 class="state-title">${i18nData[lang].errorTitle}</h2>
           <p class="state-desc">${escapeHtml(msg)}</p>
-          <button class="btn-action" style="margin-top: 8px;" onclick="fetchFeedData()">Повторить попытку</button>
+          <button class="btn-action" style="margin-top: 8px;" onclick="fetchFeedData()">${i18nData[lang].retry}</button>
         </div>
       `;
     }
 
     function updateSummaryAndCounters() {
+      const lang = state.lang;
       const total = state.decisions.length;
       const muted = state.decisions.filter(d => !d.kept).length;
       const clean = total - muted;
       const pct = total > 0 ? Math.round((muted / total) * 100) : 0;
 
       summaryBar.style.display = 'flex';
-      document.getElementById('stat-muted-num').innerText = muted;
-      document.getElementById('stat-total-num').innerText = total;
-      document.getElementById('stat-pct').innerText = `${pct}%`;
+      
+      const statTemplate = i18nData[lang].statMuted;
+      document.getElementById('summary-stat-text').innerHTML = statTemplate
+        .replace('{muted}', muted)
+        .replace('{total}', total)
+        .replace('{pct}', pct);
+
       document.getElementById('progress-bar').style.width = `${pct}%`;
 
       document.getElementById('tab-cnt-all').innerText = total;
@@ -1297,6 +1801,7 @@
     }
 
     function renderFeedList() {
+      const lang = state.lang;
       let items = state.decisions;
       if (state.activeTab === 'clean') items = items.filter(d => d.kept);
       if (state.activeTab === 'muted') items = items.filter(d => !d.kept);
@@ -1304,8 +1809,8 @@
       if (items.length === 0) {
         feedStream.innerHTML = `
           <div class="state-banner">
-            <h2 class="state-title">Здесь ничего нет</h2>
-            <p class="state-desc">По заданным условиям ни одна статья не попала в эту категорию.</p>
+            <h2 class="state-title">${i18nData[lang].noItemsTitle}</h2>
+            <p class="state-desc">${i18nData[lang].noItemsDesc}</p>
           </div>
         `;
         return;
@@ -1318,11 +1823,11 @@
           const card = document.createElement('article');
           card.className = 'article-card';
           card.innerHTML = `
-            <a class="article-title" href="${dec.item.link}" target="_blank" rel="noopener">${escapeHtml(dec.item.title || 'Untitled')}</a>
+            <a class="article-title" href="${dec.item.link}" target="_blank" rel="noopener">${escapeHtml(dec.item.title || i18nData[lang].untitled)}</a>
             <div class="article-meta">
-              <span class="badge-status clean">✓ Clean</span>
+              <span class="badge-status clean">${i18nData[lang].cleanTag}</span>
               <span>${escapeHtml(getHostname(dec.item.link))}</span>
-              <span>${escapeHtml(dec.item.published || 'Recently')}</span>
+              <span>${escapeHtml(dec.item.published || i18nData[lang].recently)}</span>
             </div>
           `;
           feedStream.appendChild(card);
@@ -1330,7 +1835,7 @@
           // Render Collapsed Muted Row (The Mute Bar)
           const row = document.createElement('div');
           row.className = 'muted-row';
-          const reasonLabel = dec.reason || 'Muted';
+          const reasonLabel = dec.reason || i18nData[lang].mutedTag;
           const detailLabel = dec.details ? ` · ${dec.details}` : '';
           
           row.innerHTML = `
@@ -1342,16 +1847,16 @@
                   <line x1="17" y1="9" x2="23" y2="15"/>
                 </svg>
                 <span class="badge-status muted">${escapeHtml(reasonLabel)}</span>
-                <span class="muted-preview-title">${escapeHtml(dec.item.title || 'Untitled')}</span>
+                <span class="muted-preview-title">${escapeHtml(dec.item.title || i18nData[lang].untitled)}</span>
               </div>
               <span class="muted-chevron">▼</span>
             </div>
             <div class="muted-details-body">
-              <div class="muted-reason-text"><strong>Причина заглушения:</strong> ${escapeHtml(reasonLabel)}${escapeHtml(detailLabel)}</div>
+              <div class="muted-reason-text"><strong>${i18nData[lang].reasonLabel}</strong> ${escapeHtml(reasonLabel)}${escapeHtml(detailLabel)}</div>
               <div style="font-size: 13px; font-weight: 500; margin-bottom: 6px;">
-                <a href="${dec.item.link}" target="_blank" rel="noopener" style="color: var(--text);">${escapeHtml(dec.item.title || 'Untitled')}</a>
+                <a href="${dec.item.link}" target="_blank" rel="noopener" style="color: var(--text);">${escapeHtml(dec.item.title || i18nData[lang].untitled)}</a>
               </div>
-              <div style="font-size: 12px; color: var(--text-muted);">${escapeHtml(dec.item.link)}</div>
+              <div style="font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">${escapeHtml(dec.item.link)}</div>
             </div>
           `;
 
@@ -1383,7 +1888,137 @@
       return div.innerHTML;
     }
 
+    // ==========================================
+    // OPML Batch Cleaner Implementation
+    // ==========================================
+    function openOpmlModal() {
+      opmlModal.classList.add('open');
+      opmlDropzone.focus();
+    }
+
+    function closeOpmlModal() {
+      opmlModal.classList.remove('open');
+    }
+
+    btnOpenOpmlModal.addEventListener('click', openOpmlModal);
+    btnCloseOpml.addEventListener('click', closeOpmlModal);
+    btnCancelOpml.addEventListener('click', closeOpmlModal);
+    opmlModal.addEventListener('click', (e) => {
+      if (e.target === opmlModal) closeOpmlModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && opmlModal.classList.contains('open')) {
+        closeOpmlModal();
+      }
+    });
+
+    opmlDropzone.addEventListener('click', () => opmlFileInput.click());
+    opmlDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      opmlDropzone.classList.add('dragover');
+    });
+    opmlDropzone.addEventListener('dragleave', () => {
+      opmlDropzone.classList.remove('dragover');
+    });
+    opmlDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      opmlDropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length > 0) {
+        processOpmlFile(e.dataTransfer.files[0]);
+      }
+    });
+    opmlFileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        processOpmlFile(e.target.files[0]);
+      }
+    });
+
+    function processOpmlFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        try {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(text, 'text/xml');
+          
+          if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+            alert('Invalid XML/OPML format.');
+            return;
+          }
+
+          const outlines = xmlDoc.querySelectorAll('outline[xmlUrl]');
+          if (outlines.length === 0) {
+            alert('No RSS feeds (<outline xmlUrl="...">) found in this file.');
+            return;
+          }
+
+          state.parsedOpmlDoc = xmlDoc;
+          state.opmlFeedCount = outlines.length;
+
+          // Render Preview
+          opmlResults.style.display = 'flex';
+          btnDownloadOpml.style.display = 'inline-flex';
+          const lang = state.lang;
+          opmlSummaryCount.innerText = i18nData[lang].opmlFeedsFound.replace('{count}', outlines.length);
+          
+          opmlFeedList.innerHTML = '';
+          outlines.forEach((o, i) => {
+            if (i < 20) {
+              const row = document.createElement('div');
+              row.innerText = `• ${o.getAttribute('text') || o.getAttribute('title') || 'Feed'}: ${o.getAttribute('xmlUrl')}`;
+              opmlFeedList.appendChild(row);
+            }
+          });
+          if (outlines.length > 20) {
+            const more = document.createElement('div');
+            more.innerText = `... and ${outlines.length - 20} more feeds`;
+            opmlFeedList.appendChild(more);
+          }
+        } catch (err) {
+          alert('Failed to parse OPML: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Download Modified OPML
+    btnDownloadOpml.addEventListener('click', () => {
+      if (!state.parsedOpmlDoc) return;
+
+      const origin = window.location.origin;
+      const presetsParam = state.presets.join(',');
+      const outlines = state.parsedOpmlDoc.querySelectorAll('outline[xmlUrl]');
+
+      outlines.forEach(outline => {
+        const origUrl = outline.getAttribute('xmlUrl');
+        if (origUrl) {
+          const params = new URLSearchParams();
+          params.set('url', origUrl);
+          if (presetsParam) params.set('presets', presetsParam);
+          if (state.keywords.length > 0) params.set('block_kw', state.keywords.join(','));
+          if (state.domains.length > 0) params.set('block_domains', state.domains.join(','));
+
+          const cleanProxyUrl = `${origin}/feed?${params.toString()}`;
+          outline.setAttribute('xmlUrl', cleanProxyUrl);
+        }
+      });
+
+      // Serialize XML back to string
+      const serializer = new XMLSerializer();
+      const newXml = serializer.serializeToString(state.parsedOpmlDoc);
+
+      const blob = new Blob([newXml], { type: 'text/xml;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'mutefeed_clean_subscriptions.opml';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    });
+
     // Initialize
+    setLanguage(state.lang);
     btnFetch.addEventListener('click', fetchFeedData);
     feedUrlInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
