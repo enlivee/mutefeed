@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MuteFeed — Quiet, Clean, AI-Slop-Free RSS Feeds</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Palette: "Тихая редакция" (Dark by default) */
+      --bg: #0E0D0C;
+      --surface: #171514;
+      --surface-subtle: #1F1C1B;
+      --surface-hover: #262321;
+      --border: #2A2623;
+      --border-focus: #E65100;
+      
+      --text: #EDE9E3;
+      --text-muted: #A39D94;
+      --text-faint: #78736B;
+      
+      --accent: #E65100;
+      --accent-hover: #FF6600;
+      --accent-glow: rgba(230, 81, 0, 0.15);
+      --accent-contrast: #0E0D0C;
+      
+      --badge-clean-bg: #102619;
+      --badge-clean-text: #4ADE80;
+      --badge-clean-border: #1B452D;
+      
+      --badge-muted-bg: #281410;
+      --badge-muted-text: #FB7185;
+      --badge-muted-border: #4D211A;
+
+      --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+      --font-sans: 'Public Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #FAF8F5;
+        --surface: #FFFFFF;
+        --surface-subtle: #F3EFEA;
+        --surface-hover: #EBE6DF;
+        --border: #D8D2C8;
+        --border-focus: #BA3800;
+
+        --text: #1C1A18;
+        --text-muted: #524E47;
+        --text-faint: #59554E;
+
+        --accent: #BA3800;
+        --accent-hover: #9E2F00;
+        --accent-glow: rgba(186, 56, 0, 0.12);
+        --accent-contrast: #FFFFFF;
+
+        --badge-clean-bg: #EAF7EE;
+        --badge-clean-text: #0E6833;
+        --badge-clean-border: #BCE6C8;
+
+        --badge-muted-bg: #FDF1ED;
+        --badge-muted-text: #B42318;
+        --badge-muted-border: #F6C5B8;
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    ::selection {
+      background: var(--accent);
+      color: var(--accent-contrast);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 96px; /* space for sticky bottom bar */
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* Masthead */
+    header.masthead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+
+    .brand-title {
+      font-family: var(--font-serif);
+      font-size: 30px;
+      font-weight: 500;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .brand-tagline {
+      font-size: 13px;
+      color: var(--text-muted);
+      letter-spacing: 0.1px;
+    }
+
+    .meta-tag {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meta-tag .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ADE80;
+    }
+
+    /* 2-Column App Layout */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    }
+
+    /* Settings Panel (Left) */
+    .panel-settings {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .settings-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .input-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .text-input-wrap {
+      display: flex;
+      gap: 8px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 1px var(--border-focus);
+    }
+
+    /* Quick Example Chips */
+    .chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .chip-btn {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .chip-btn:hover {
+      color: var(--text);
+      border-color: var(--text-muted);
+    }
+
+    /* Action Button */
+    .btn-action {
+      background: var(--accent);
+      color: var(--accent-contrast);
+      font-weight: 600;
+      font-size: 13px;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background var(--transition-fast), transform var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn-action:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-action:active {
+      transform: scale(0.98);
+    }
+
+    .btn-action:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Presets: Switch Cards */
+    .presets-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .preset-card {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      cursor: pointer;
+      transition: border-color var(--transition-fast), background var(--transition-fast);
+      user-select: none;
+    }
+
+    .preset-card:hover {
+      background: var(--surface-hover);
+    }
+
+    .preset-card.active {
+      border-color: rgba(230, 81, 0, 0.45);
+    }
+
+    .preset-info {
+      flex: 1;
+    }
+
+    .preset-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+
+    .preset-name {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .preset-counter {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--border);
+      color: var(--text-muted);
+    }
+
+    .preset-counter.has-muted {
+      background: var(--badge-muted-bg);
+      color: var(--badge-muted-text);
+      border: 1px solid var(--badge-muted-border);
+    }
+
+    .preset-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Switch Component */
+    .switch-toggle {
+      width: 38px;
+      height: 22px;
+      background: var(--border);
+      border-radius: 20px;
+      position: relative;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+      flex-shrink: 0;
+      border: none;
+      padding: 0;
+    }
+
+    .switch-toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      background: var(--text);
+      border-radius: 50%;
+      transition: transform var(--transition-fast);
+    }
+
+    .preset-card.active .switch-toggle {
+      background: var(--accent);
+    }
+
+    .preset-card.active .switch-toggle::after {
+      transform: translateX(16px);
+      background: var(--accent-contrast);
+    }
+
+    /* Tag Inputs */
+    .tag-input-box {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      min-height: 42px;
+      transition: border-color var(--transition-fast);
+    }
+
+    .tag-input-box:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 1px var(--border-focus);
+    }
+
+    .tag-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tag-remove {
+      cursor: pointer;
+      color: var(--text-faint);
+      font-size: 14px;
+      line-height: 1;
+      border: none;
+      background: none;
+      padding: 0;
+    }
+
+    .tag-remove:hover {
+      color: var(--badge-muted-text);
+    }
+
+    .tag-inner-input {
+      border: none !important;
+      background: transparent !important;
+      padding: 4px 6px !important;
+      font-size: 13px !important;
+      flex: 1;
+      min-width: 120px;
+      color: var(--text);
+      box-shadow: none !important;
+    }
+
+    .tag-inner-input:focus {
+      outline: none;
+    }
+
+    /* Preview Panel (Right) */
+    .panel-preview {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Summary Bar */
+    .summary-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .summary-stat-line {
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .summary-stat-line b {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 15px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-subtle);
+      padding: 3px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .tab-pill {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-pill:hover {
+      color: var(--text);
+    }
+
+    .tab-pill.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+
+    /* Progress track */
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: var(--surface-subtle);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Feed Stream */
+    .feed-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Clean Article Card */
+    .article-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      transition: border-color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .article-card:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-1px);
+    }
+
+    .article-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 6px;
+      line-height: 1.35;
+    }
+
+    .article-title:hover {
+      color: var(--accent);
+    }
+
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .badge-status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge-status.clean {
+      background: var(--badge-clean-bg);
+      color: var(--badge-clean-text);
+      border: 1px solid var(--badge-clean-border);
+    }
+
+    .badge-status.muted {
+      background: var(--badge-muted-bg);
+      color: var(--badge-muted-text);
+      border: 1px solid var(--badge-muted-border);
+    }
+
+    /* Muted (Collapsed) Row */
+    .muted-row {
+      background: rgba(23, 21, 20, 0.6);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      transition: all var(--transition-fast);
+    }
+
+    .muted-bar {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .muted-bar:hover {
+      background: var(--surface-subtle);
+      color: var(--text);
+    }
+
+    .muted-info-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mute-icon {
+      flex-shrink: 0;
+      color: var(--badge-muted-text);
+    }
+
+    .muted-preview-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+      opacity: 0.85;
+    }
+
+    .muted-chevron {
+      font-size: 12px;
+      transition: transform var(--transition-fast);
+      color: var(--text-faint);
+    }
+
+    .muted-row.expanded .muted-chevron {
+      transform: rotate(180deg);
+    }
+
+    .muted-details-body {
+      display: none;
+      padding: 14px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 13px;
+    }
+
+    .muted-row.expanded .muted-details-body {
+      display: block;
+    }
+
+    .muted-reason-text {
+      color: var(--badge-muted-text);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    /* Skeleton Loading State */
+    .skeleton-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .skeleton-line {
+      height: 14px;
+      background: var(--surface-subtle);
+      border-radius: 4px;
+      animation: skeleton-pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes skeleton-pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 0.25; }
+      100% { opacity: 0.6; }
+    }
+
+    /* Empty and Error States */
+    .state-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 48px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .state-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--surface-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .state-title {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 500;
+    }
+
+    .state-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 440px;
+      line-height: 1.5;
+    }
+
+    /* Sticky Bottom Bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(23, 21, 20, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      padding: 14px 20px;
+    }
+
+    @media (prefers-color-scheme: light) {
+      .bottom-bar {
+        background: rgba(255, 255, 255, 0.94);
+      }
+    }
+
+    .bottom-bar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .url-display-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .url-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .url-pill-box {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent);
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      direction: rtl;
+      text-align: left;
+    }
+
+    .bottom-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-secondary {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--transition-fast);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+      border-color: var(--text-muted);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Masthead -->
+    <header class="masthead">
+      <a href="/" class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+            <line x1="23" y1="9" x2="17" y2="15"/>
+            <line x1="17" y1="9" x2="23" y2="15"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">MuteFeed</h1>
+          <p class="brand-tagline">Quiet, clean, AI-slop-free RSS feeds</p>
+        </div>
+      </a>
+      <div class="meta-tag" title="Local-first RSS proxy engine running on your Mac">
+        <span class="dot"></span>
+        <span>Local Proxy · v1.0.0</span>
+      </div>
+    </header>
+
+    <!-- Main Layout -->
+    <main class="app-layout">
+      
+      <!-- Left Column: Settings -->
+      <section class="panel-settings" aria-label="Параметры фильтрации">
+        
+        <!-- Source URL Card -->
+        <div class="settings-card">
+          <div class="section-title">Источник ленты</div>
+          <div class="input-field-group">
+            <div class="text-input-wrap">
+              <input type="text" id="feed-url" placeholder="https://news.ycombinator.com/rss" value="https://news.ycombinator.com/rss" aria-label="URL новостной RSS-ленты">
+              <button class="btn-action" id="btn-fetch" aria-label="Применить фильтры">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span>Filter</span>
+              </button>
+            </div>
+            
+            <div class="chips-row">
+              <span style="font-size: 12px; color: var(--text-faint); align-self: center; margin-right: 2px;">Примеры:</span>
+              <button class="chip-btn" type="button" data-url="https://news.ycombinator.com/rss">Hacker News</button>
+              <button class="chip-btn" type="button" data-url="https://techcrunch.com/feed/">TechCrunch</button>
+              <button class="chip-btn" type="button" data-url="https://www.theverge.com/rss/index.xml">The Verge</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Presets Card -->
+        <div class="settings-card">
+          <div class="section-title">Пресеты фильтрации</div>
+          <div class="presets-stack" id="presets-container">
+            
+            <!-- Paywalls -->
+            <div class="preset-card active" data-preset="paywalls" role="switch" aria-checked="true" tabindex="0">
+              <div class="preset-info">
+                <div class="preset-header">
+                  <span class="preset-name">Block Paywalls</span>
+                  <span class="preset-counter" id="count-paywalls">0</span>
+                </div>
+                <div class="preset-desc">Forbes, WSJ, Bloomberg, NYT, Wired, The Information</div>
+              </div>
+              <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
+            </div>
+
+            <!-- AI Slop -->
+            <div class="preset-card active" data-preset="ai-slop" role="switch" aria-checked="true" tabindex="0">
+              <div class="preset-info">
+                <div class="preset-header">
+                  <span class="preset-name">Filter AI Slop</span>
+                  <span class="preset-counter" id="count-ai-slop">0</span>
+                </div>
+                <div class="preset-desc">Клише LLM, пустой корпоративный слоп, шаблонные фразы</div>
+              </div>
+              <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
+            </div>
+
+            <!-- Clickbait -->
+            <div class="preset-card active" data-preset="clickbait" role="switch" aria-checked="true" tabindex="0">
+              <div class="preset-info">
+                <div class="preset-header">
+                  <span class="preset-name">Clickbait & Ragebait</span>
+                  <span class="preset-counter" id="count-clickbait">0</span>
+                </div>
+                <div class="preset-desc">«Вы не поверите», «Вот почему», капслок, манипуляции</div>
+              </div>
+              <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
+            </div>
+
+            <!-- Sponsored -->
+            <div class="preset-card active" data-preset="sponsored" role="switch" aria-checked="true" tabindex="0">
+              <div class="preset-info">
+                <div class="preset-header">
+                  <span class="preset-name">Sponsored Content</span>
+                  <span class="preset-counter" id="count-sponsored">0</span>
+                </div>
+                <div class="preset-desc">Нативная реклама, партнерские материалы, промо-посты</div>
+              </div>
+              <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
+            </div>
+
+            <!-- Crypto Hype -->
+            <div class="preset-card" data-preset="crypto-hype" role="switch" aria-checked="false" tabindex="0">
+              <div class="preset-info">
+                <div class="preset-header">
+                  <span class="preset-name">Crypto & Web3 Hype</span>
+                  <span class="preset-counter" id="count-crypto-hype">0</span>
+                </div>
+                <div class="preset-desc">Мемкоины, аирдропы, спекулятивная токеномика, NFT</div>
+              </div>
+              <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Custom Keywords Card (Tag Input) -->
+        <div class="settings-card">
+          <div class="section-title">Стоп-слова (Tag Input)</div>
+          <div class="tag-input-box" id="tag-box-keywords">
+            <input type="text" class="tag-inner-input" id="input-keyword-tag" placeholder="Введите слово + Enter (напр. ai, gpt)...">
+          </div>
+          <div style="font-size: 12px; color: var(--text-faint); margin-top: 6px;">
+            Нажмите Enter или запятую для добавления тега.
+          </div>
+        </div>
+
+        <!-- Custom Domains Card (Tag Input) -->
+        <div class="settings-card">
+          <div class="section-title">Стоп-домены (Tag Input)</div>
+          <div class="tag-input-box" id="tag-box-domains">
+            <input type="text" class="tag-inner-input" id="input-domain-tag" placeholder="Введите домен + Enter (напр. medium.com)...">
+          </div>
+          <div style="font-size: 12px; color: var(--text-faint); margin-top: 6px;">
+            Статьи с этих сайтов будут заглушены независимо от пресетов.
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Column: Live Feed Preview -->
+      <section class="panel-preview" aria-label="Живое превью очищенной ленты">
+        
+        <!-- Summary Bar -->
+        <div class="summary-bar" id="summary-bar" style="display: none;" aria-live="polite">
+          <div class="summary-header">
+            <div class="summary-stat-line" id="summary-stat-text">
+              Заглушено <b id="stat-muted-num">0</b> из <b id="stat-total-num">0</b> (<span id="stat-pct">0%</span> шума)
+            </div>
+            
+            <div class="filter-tabs" role="tablist">
+              <button class="tab-pill active" role="tab" aria-selected="true" data-tab="all">Все (<span id="tab-cnt-all">0</span>)</button>
+              <button class="tab-pill" role="tab" aria-selected="false" data-tab="clean">Чистые (<span id="tab-cnt-clean">0</span>)</button>
+              <button class="tab-pill" role="tab" aria-selected="false" data-tab="muted">Заглушенные (<span id="tab-cnt-muted">0</span>)</button>
+            </div>
+          </div>
+
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-bar"></div>
+          </div>
+        </div>
+
+        <!-- Feed List Items -->
+        <div class="feed-stream" id="feed-stream">
+          <!-- Initial Empty State -->
+          <div class="state-banner" id="empty-state">
+            <div class="state-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+              </svg>
+            </div>
+            <h2 class="state-title">Тишина в эфире</h2>
+            <p class="state-desc">Введите ссылку на RSS-ленту или кликните один из примеров выше, чтобы увидеть фильтрацию в реальном времени.</p>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Sticky Bottom Bar -->
+  <footer class="bottom-bar" id="bottom-bar">
+    <div class="bottom-bar-inner">
+      <div class="url-display-group">
+        <span class="url-label">Clean Feed URL:</span>
+        <div class="url-pill-box" id="bottom-feed-url" title="URL очищенной RSS-ленты для вставки в ваш ридер">
+          http://localhost:8899/feed?url=https://news.ycombinator.com/rss
+        </div>
+      </div>
+      <div class="bottom-actions">
+        <button class="btn-action" id="btn-copy-url">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span id="btn-copy-text">Copy URL</span>
+        </button>
+        <a class="btn-secondary" id="btn-open-reader" href="#" target="_blank" rel="noopener">
+          <span>Open feed</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // State management
+    const state = {
+      feedUrl: 'https://news.ycombinator.com/rss',
+      presets: ['paywalls', 'ai-slop', 'clickbait', 'sponsored'],
+      keywords: [],
+      domains: [],
+      activeTab: 'all',
+      decisions: [],
+      isLoading: false
+    };
+
+    // DOM Elements
+    const feedUrlInput = document.getElementById('feed-url');
+    const btnFetch = document.getElementById('btn-fetch');
+    const presetsContainer = document.getElementById('presets-container');
+    const feedStream = document.getElementById('feed-stream');
+    const summaryBar = document.getElementById('summary-bar');
+    const bottomFeedUrl = document.getElementById('bottom-feed-url');
+    const btnCopyUrl = document.getElementById('btn-copy-url');
+    const btnCopyText = document.getElementById('btn-copy-text');
+    const btnOpenReader = document.getElementById('btn-open-reader');
+
+    // Tag Inputs
+    const tagBoxKeywords = document.getElementById('tag-box-keywords');
+    const inputKeywordTag = document.getElementById('input-keyword-tag');
+    const tagBoxDomains = document.getElementById('tag-box-domains');
+    const inputDomainTag = document.getElementById('input-domain-tag');
+
+    // Setup Presets Toggles
+    presetsContainer.querySelectorAll('.preset-card').forEach(card => {
+      const toggle = () => {
+        const preset = card.dataset.preset;
+        const isActive = card.classList.toggle('active');
+        card.setAttribute('aria-checked', isActive);
+        if (isActive) {
+          if (!state.presets.includes(preset)) state.presets.push(preset);
+        } else {
+          state.presets = state.presets.filter(p => p !== preset);
+        }
+        updateBottomUrl();
+        fetchFeedData();
+      };
+
+      card.addEventListener('click', toggle);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          toggle();
+        }
+      });
+    });
+
+    // Tag Input Helper
+    function setupTagInput(boxEl, inputEl, stateKey) {
+      function renderTags() {
+        boxEl.querySelectorAll('.tag-item').forEach(el => el.remove());
+        state[stateKey].forEach((tag, idx) => {
+          const tagEl = document.createElement('span');
+          tagEl.className = 'tag-item';
+          tagEl.innerHTML = `${escapeHtml(tag)} <button type="button" class="tag-remove" aria-label="Удалить тег">&times;</button>`;
+          tagEl.querySelector('.tag-remove').addEventListener('click', (e) => {
+            e.stopPropagation();
+            state[stateKey].splice(idx, 1);
+            renderTags();
+            updateBottomUrl();
+            fetchFeedData();
+          });
+          boxEl.insertBefore(tagEl, inputEl);
+        });
+      }
+
+      inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          const val = inputEl.value.trim().replace(/^,+|,+$/g, '');
+          if (val && !state[stateKey].includes(val)) {
+            state[stateKey].push(val);
+            inputEl.value = '';
+            renderTags();
+            updateBottomUrl();
+            fetchFeedData();
+          }
+        } else if (e.key === 'Backspace' && inputEl.value === '' && state[stateKey].length > 0) {
+          state[stateKey].pop();
+          renderTags();
+          updateBottomUrl();
+          fetchFeedData();
+        }
+      });
+
+      boxEl.addEventListener('click', () => inputEl.focus());
+      return renderTags;
+    }
+
+    const renderKeywords = setupTagInput(tagBoxKeywords, inputKeywordTag, 'keywords');
+    const renderDomains = setupTagInput(tagBoxDomains, inputDomainTag, 'domains');
+
+    // Example Chips
+    document.querySelectorAll('.chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        feedUrlInput.value = btn.dataset.url;
+        state.feedUrl = btn.dataset.url;
+        updateBottomUrl();
+        fetchFeedData();
+      });
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-pill').forEach(p => {
+          p.classList.remove('active');
+          p.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        state.activeTab = btn.dataset.tab;
+        renderFeedList();
+      });
+    });
+
+    // Generate Clean URL for bottom bar
+    function updateBottomUrl() {
+      const base = window.location.origin + '/feed';
+      const params = new URLSearchParams();
+      params.set('url', feedUrlInput.value.trim());
+      if (state.presets.length > 0) params.set('presets', state.presets.join(','));
+      if (state.keywords.length > 0) params.set('block_kw', state.keywords.join(','));
+      if (state.domains.length > 0) params.set('block_domains', state.domains.join(','));
+
+      const cleanUrl = `${base}?${params.toString()}`;
+      bottomFeedUrl.innerText = cleanUrl;
+      bottomFeedUrl.title = cleanUrl;
+      btnOpenReader.href = cleanUrl;
+    }
+
+    // Copy Button with 2s Confirmation
+    btnCopyUrl.addEventListener('click', () => {
+      navigator.clipboard.writeText(bottomFeedUrl.innerText).then(() => {
+        btnCopyText.innerText = 'Copied!';
+        btnCopyUrl.style.background = '#0E6833';
+        setTimeout(() => {
+          btnCopyText.innerText = 'Copy URL';
+          btnCopyUrl.style.background = '';
+        }, 2000);
+      });
+    });
+
+    // Fetch and Process Feed
+    async function fetchFeedData() {
+      const url = feedUrlInput.value.trim();
+      if (!url) return;
+
+      state.isLoading = true;
+      btnFetch.disabled = true;
+      renderSkeleton();
+
+      const params = new URLSearchParams();
+      params.set('url', url);
+      if (state.presets.length > 0) params.set('presets', state.presets.join(','));
+      if (state.keywords.length > 0) params.set('block_kw', state.keywords.join(','));
+      if (state.domains.length > 0) params.set('block_domains', state.domains.join(','));
+
+      try {
+        const resp = await fetch(`/api/test?${params.toString()}`);
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          renderError(errData.error || `HTTP ${resp.status}`);
+          return;
+        }
+
+        const data = await resp.json();
+        state.decisions = data.decisions || [];
+        updateSummaryAndCounters();
+        renderFeedList();
+      } catch (err) {
+        renderError(err.message);
+      } finally {
+        state.isLoading = false;
+        btnFetch.disabled = false;
+      }
+    }
+
+    function renderSkeleton() {
+      summaryBar.style.display = 'none';
+      feedStream.innerHTML = `
+        <div class="skeleton-card"><div class="skeleton-line" style="width: 70%;"></div><div class="skeleton-line" style="width: 35%;"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width: 85%;"></div><div class="skeleton-line" style="width: 40%;"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width: 60%;"></div><div class="skeleton-line" style="width: 30%;"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width: 75%;"></div><div class="skeleton-line" style="width: 50%;"></div></div>
+      `;
+    }
+
+    function renderError(msg) {
+      summaryBar.style.display = 'none';
+      feedStream.innerHTML = `
+        <div class="state-banner">
+          <div class="state-icon" style="color: var(--badge-muted-text);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <h2 class="state-title">Не удалось загрузить ленту</h2>
+          <p class="state-desc">${escapeHtml(msg)}</p>
+          <button class="btn-action" style="margin-top: 8px;" onclick="fetchFeedData()">Повторить попытку</button>
+        </div>
+      `;
+    }
+
+    function updateSummaryAndCounters() {
+      const total = state.decisions.length;
+      const muted = state.decisions.filter(d => !d.kept).length;
+      const clean = total - muted;
+      const pct = total > 0 ? Math.round((muted / total) * 100) : 0;
+
+      summaryBar.style.display = 'flex';
+      document.getElementById('stat-muted-num').innerText = muted;
+      document.getElementById('stat-total-num').innerText = total;
+      document.getElementById('stat-pct').innerText = `${pct}%`;
+      document.getElementById('progress-bar').style.width = `${pct}%`;
+
+      document.getElementById('tab-cnt-all').innerText = total;
+      document.getElementById('tab-cnt-clean').innerText = clean;
+      document.getElementById('tab-cnt-muted').innerText = muted;
+
+      // Update counters on preset cards
+      const counts = { 'paywalls': 0, 'ai-slop': 0, 'clickbait': 0, 'sponsored': 0, 'crypto-hype': 0 };
+      state.decisions.forEach(d => {
+        if (!d.kept && d.reason) {
+          const r = d.reason.toLowerCase();
+          const dt = (d.details || '').toLowerCase();
+          if (r.includes('paywall') || dt.includes('domain')) counts['paywalls']++;
+          else if (r.includes('ai slop')) counts['ai-slop']++;
+          else if (r.includes('pattern') || r.includes('clickbait')) counts['clickbait']++;
+          else if (r.includes('sponsored')) counts['sponsored']++;
+          else if (dt.includes('crypto')) counts['crypto-hype']++;
+        }
+      });
+
+      for (const [key, num] of Object.entries(counts)) {
+        const el = document.getElementById(`count-${key}`);
+        if (el) {
+          el.innerText = num;
+          el.classList.toggle('has-muted', num > 0);
+        }
+      }
+    }
+
+    function renderFeedList() {
+      let items = state.decisions;
+      if (state.activeTab === 'clean') items = items.filter(d => d.kept);
+      if (state.activeTab === 'muted') items = items.filter(d => !d.kept);
+
+      if (items.length === 0) {
+        feedStream.innerHTML = `
+          <div class="state-banner">
+            <h2 class="state-title">Здесь ничего нет</h2>
+            <p class="state-desc">По заданным условиям ни одна статья не попала в эту категорию.</p>
+          </div>
+        `;
+        return;
+      }
+
+      feedStream.innerHTML = '';
+      items.forEach(dec => {
+        if (dec.kept) {
+          // Render Normal Clean Card
+          const card = document.createElement('article');
+          card.className = 'article-card';
+          card.innerHTML = `
+            <a class="article-title" href="${dec.item.link}" target="_blank" rel="noopener">${escapeHtml(dec.item.title || 'Untitled')}</a>
+            <div class="article-meta">
+              <span class="badge-status clean">✓ Clean</span>
+              <span>${escapeHtml(getHostname(dec.item.link))}</span>
+              <span>${escapeHtml(dec.item.published || 'Recently')}</span>
+            </div>
+          `;
+          feedStream.appendChild(card);
+        } else {
+          // Render Collapsed Muted Row (The Mute Bar)
+          const row = document.createElement('div');
+          row.className = 'muted-row';
+          const reasonLabel = dec.reason || 'Muted';
+          const detailLabel = dec.details ? ` · ${dec.details}` : '';
+          
+          row.innerHTML = `
+            <div class="muted-bar" tabindex="0" role="button" aria-expanded="false">
+              <div class="muted-info-left">
+                <svg class="mute-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                  <line x1="23" y1="9" x2="17" y2="15"/>
+                  <line x1="17" y1="9" x2="23" y2="15"/>
+                </svg>
+                <span class="badge-status muted">${escapeHtml(reasonLabel)}</span>
+                <span class="muted-preview-title">${escapeHtml(dec.item.title || 'Untitled')}</span>
+              </div>
+              <span class="muted-chevron">▼</span>
+            </div>
+            <div class="muted-details-body">
+              <div class="muted-reason-text"><strong>Причина заглушения:</strong> ${escapeHtml(reasonLabel)}${escapeHtml(detailLabel)}</div>
+              <div style="font-size: 13px; font-weight: 500; margin-bottom: 6px;">
+                <a href="${dec.item.link}" target="_blank" rel="noopener" style="color: var(--text);">${escapeHtml(dec.item.title || 'Untitled')}</a>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted);">${escapeHtml(dec.item.link)}</div>
+            </div>
+          `;
+
+          const bar = row.querySelector('.muted-bar');
+          const toggleRow = () => {
+            const isExp = row.classList.toggle('expanded');
+            bar.setAttribute('aria-expanded', isExp);
+          };
+          bar.addEventListener('click', toggleRow);
+          bar.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleRow();
+            }
+          });
+
+          feedStream.appendChild(row);
+        }
+      });
+    }
+
+    function getHostname(url) {
+      try { return new URL(url).hostname; } catch(e) { return ''; }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.innerText = str;
+      return div.innerHTML;
+    }
+
+    // Initialize
+    btnFetch.addEventListener('click', fetchFeedData);
+    feedUrlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        fetchFeedData();
+      }
+    });
+
+    updateBottomUrl();
+    fetchFeedData();
+  </script>
+</body>
+</html>

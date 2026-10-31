@@ -1,0 +1,31 @@
+# MuteFeed Configuration
+host: "0.0.0.0"
+port: 8899
+
+# Global default filter options
+defaults:
+  presets:
+    - paywalls     # wsj.com, bloomberg.com, nytimes.com, forbes.com, etc.
+    - ai-slop       # "in today's fast-paced world", "delve into", etc.
+    - clickbait    # "You won't believe", "Here's why", ALL CAPS titles
+    - sponsored    # Native ads, sponsored posts, affiliate markers
+  filter_slop: true
+  slop_threshold: 0.5
+  clean_links: true # Strip utm_source, fbclid, gclid, ref tracking tags
+  max_items: 50
+
+# Pre-configured named feeds
+# Access via: http://localhost:8899/feed?name=hn
+feeds:
+  hn:
+    url: "https://news.ycombinator.com/rss"
+    options:
+      presets: ["paywalls", "ai-slop", "clickbait", "sponsored"]
+      clean_links: true
+      max_items: 60
+
+  tech:
+    url: "https://techcrunch.com/feed/"
+    options:
+      presets: ["sponsored", "crypto-hype", "ai-slop"]
+      block_keywords: ["dealbook", "seed round"]
