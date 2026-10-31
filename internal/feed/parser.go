@@ -355,6 +355,21 @@ func (c *FeedCache) Clear() {
 	c.entries = make(map[string]*FeedCacheEntry)
 }
 
+// UpdateConditional updates the ETag, LastModified, and FetchedAt timestamp thread-safely
+func (c *FeedCache) UpdateConditional(feedURL string, newETag, newLastMod string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if entry, ok := c.entries[feedURL]; ok {
+		if newETag != "" {
+			entry.ETag = newETag
+		}
+		if newLastMod != "" {
+			entry.LastModified = newLastMod
+		}
+		entry.FetchedAt = time.Now()
+	}
+}
+
 // Stats returns conditional 304 hits, 200 full fetches, and total active entries
 func (c *FeedCache) Stats() (conditionalHits uint64, fullFetches uint64, totalEntries int) {
 	c.mu.RLock()
@@ -383,6 +398,11 @@ func DefaultFeedCache() *FeedCache {
 // SetDefaultFeedCache overrides the global upstream feed cache
 func SetDefaultFeedCache(c *FeedCache) {
 	defaultFeedCache = c
+}
+
+// CloneFeed creates an isolated copy of gofeed.Feed and its Items to avoid data races
+func CloneFeed(f *gofeed.Feed) *gofeed.Feed {
+	return cloneFeed(f)
 }
 
 // cloneFeed creates an isolated copy of gofeed.Feed and its Items to avoid data races
@@ -554,15 +574,10 @@ func fetchAndParse(ctx context.Context, client *http.Client, cache *FeedCache, f
 	if resp.StatusCode == http.StatusNotModified {
 		if hasCached && cached != nil && cached.Feed != nil {
 			atomic.AddUint64(&cache.conditionalHits, 1)
-			newETag := resp.Header.Get("ETag")
-			if newETag != "" {
-				cached.ETag = newETag
+			cache.UpdateConditional(targetURL, resp.Header.Get("ETag"), resp.Header.Get("Last-Modified"))
+			if feedURL != targetURL {
+				cache.UpdateConditional(feedURL, resp.Header.Get("ETag"), resp.Header.Get("Last-Modified"))
 			}
-			newLastMod := resp.Header.Get("Last-Modified")
-			if newLastMod != "" {
-				cached.LastModified = newLastMod
-			}
-			cached.FetchedAt = time.Now()
 			return cloneFeed(cached.Feed), false, nil, nil
 		}
 		return nil, false, nil, fmt.Errorf("received 304 Not Modified without cached feed for %s", targetURL)

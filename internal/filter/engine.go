@@ -251,6 +251,11 @@ func (e *Engine) Evaluate(item *gofeed.Item) Decision {
 	}
 }
 
+// EvaluateFeed is an alias for FilterFeed, evaluating and filtering an entire feed
+func (e *Engine) EvaluateFeed(feed *gofeed.Feed) ([]*gofeed.Item, []Decision) {
+	return e.FilterFeed(feed)
+}
+
 // FilterFeed processes an entire feed, returning kept items and decisions
 func (e *Engine) FilterFeed(feed *gofeed.Feed) ([]*gofeed.Item, []Decision) {
 	var kept []*gofeed.Item

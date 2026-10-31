@@ -6,77 +6,118 @@
   <title>MuteFeed — Quiet, Clean, AI-Slop-Free RSS Feeds</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Palette: "Quiet Editorial" (Dark by default) */
-      --bg: #0E0D0C;
-      --surface: #171514;
-      --surface-subtle: #1F1C1B;
-      --surface-hover: #262321;
-      --border: #2A2623;
-      --border-focus: #C84408;
+      /* Aesthetic: "Quiet Editorial & Precision Instrument" (Dieter Rams x Swiss Editorial) */
+      --bg: #0C0B0A;
+      --surface: #151413;
+      --surface-subtle: #1C1A18;
+      --surface-hover: #242220;
       
-      --text: #EDE9E3;
-      --text-muted: #A39D94;
-      --text-faint: #78736B;
+      --border: #2D2A26;
+      --border-hover: #3D3934;
+      --border-strong: #4C4740;
+      --border-focus: #E05315;
       
-      --accent: #C84408;
-      --accent-hover: #DE5314;
-      --accent-glow: rgba(200, 68, 8, 0.16);
+      /* WCAG AA Compliant Typography Contrast */
+      --text: #F4F0EA;         /* Contrast > 15:1 */
+      --text-muted: #A6A095;   /* Contrast > 7:1 */
+      --text-faint: #8E887E;   /* Contrast > 4.8:1 */
+      
+      /* Braun Signal Amber / Orange */
+      --accent: #E05315;
+      --accent-hover: #F26424;
+      --accent-active: #C4430A;
       --accent-contrast: #FFFFFF;
       
-      --badge-clean-bg: #102619;
-      --badge-clean-text: #4ADE80;
-      --badge-clean-border: #1B452D;
+      /* Editorial Ink Tags (No neon slop) */
+      --tag-clean-bg: #141A16;
+      --tag-clean-text: #62C07D;
+      --tag-clean-border: #233527;
       
-      --badge-muted-bg: #281410;
-      --badge-muted-text: #FB7185;
-      --badge-muted-border: #4D211A;
+      --tag-muted-bg: #1C1514;
+      --tag-muted-text: #E07D70;
+      --tag-muted-border: #382522;
 
+      /* Type System */
       --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
       --font-sans: 'Public Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
       
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+      /* Precision Geometry */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --transition-fast: 140ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     @media (prefers-color-scheme: light) {
       :root {
-        --bg: #FAF8F5;
+        --bg: #F4F5F7;
         --surface: #FFFFFF;
-        --surface-subtle: #F3EFEA;
-        --surface-hover: #EBE6DF;
-        --border: #D8D2C8;
-        --border-focus: #BA3800;
+        --surface-subtle: #EBEEF2;
+        --surface-hover: #E1E5EC;
+        
+        --border: #D0D5DD;
+        --border-hover: #B4BCC8;
+        --border-strong: #8A94A4;
+        --border-focus: #BD3B06;
 
-        --text: #1C1A18;
-        --text-muted: #524E47;
-        --text-faint: #59554E;
+        --text: #111315;         /* Contrast > 15:1 */
+        --text-muted: #4B525D;   /* Contrast > 7:1 */
+        --text-faint: #656E7B;   /* Contrast > 4.8:1 */
 
-        --accent: #BA3800;
-        --accent-hover: #9E2F00;
-        --accent-glow: rgba(186, 56, 0, 0.12);
+        --accent: #BD3B06;
+        --accent-hover: #D44409;
+        --accent-active: #9E3003;
         --accent-contrast: #FFFFFF;
 
-        --badge-clean-bg: #EAF7EE;
-        --badge-clean-text: #0E6833;
-        --badge-clean-border: #BCE6C8;
+        --tag-clean-bg: #EDF5F0;
+        --tag-clean-text: #186333;
+        --tag-clean-border: #C2DEC9;
 
-        --badge-muted-bg: #FDF1ED;
-        --badge-muted-text: #B42318;
-        --badge-muted-border: #F6C5B8;
+        --tag-muted-bg: #F9EFEF;
+        --tag-muted-text: #96281D;
+        --tag-muted-border: #E8CAC7;
       }
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Reset & Mechanical Baseline */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
+    /* Browser Surfaces Themed to Palette */
     ::selection {
       background: var(--accent);
-      color: var(--accent-contrast);
+      color: #FFFFFF;
+    }
+
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: var(--radius-sm);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-hover);
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) var(--bg);
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
     body {
@@ -86,13 +127,21 @@
       font-size: 14px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
-      padding-bottom: 96px; /* space for sticky bottom bar */
+      -moz-osx-font-smoothing: grayscale;
+      padding-bottom: 104px; /* Clearance for sticky docked reader bar */
+      caret-color: var(--accent);
+    }
+
+    a {
+      color: inherit;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1px;
     }
 
     .container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 24px 20px;
+      padding: 32px 24px;
     }
 
     /* Masthead */
@@ -102,22 +151,22 @@
       align-items: center;
       padding-bottom: 24px;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 28px;
+      margin-bottom: 32px;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 20px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 16px;
       text-decoration: none;
       color: inherit;
     }
 
     .brand-mark {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
@@ -125,29 +174,34 @@
       align-items: center;
       justify-content: center;
       color: var(--accent);
+      flex-shrink: 0;
     }
 
     .brand-title {
       font-family: var(--font-serif);
       font-size: 30px;
       font-weight: 500;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.02em;
       line-height: 1.1;
+      text-wrap: balance;
     }
 
     .brand-tagline {
       font-size: 13px;
       color: var(--text-muted);
-      letter-spacing: 0.1px;
+      letter-spacing: -0.005em;
+      margin-top: 2px;
+      text-wrap: pretty;
     }
 
     .header-controls {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: wrap;
     }
 
+    /* Precision Segmented Language Switcher */
     .lang-group {
       display: inline-flex;
       background: var(--surface);
@@ -164,9 +218,9 @@
       font-size: 12px;
       font-weight: 600;
       padding: 5px 10px;
-      border-radius: 4px;
+      border-radius: 3px;
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: color var(--transition-fast), background var(--transition-fast);
       font-family: var(--font-sans);
     }
 
@@ -177,54 +231,56 @@
     .lang-btn.active {
       background: var(--surface-subtle);
       color: var(--text);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
     }
 
+    /* Batch OPML Header Button */
     .btn-opml-header {
       background: var(--surface);
       border: 1px solid var(--border);
       color: var(--text);
       font-size: 12px;
       font-weight: 600;
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: var(--radius-sm);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: all var(--transition-fast);
+      gap: 8px;
+      transition: background var(--transition-fast), border-color var(--transition-fast);
       font-family: var(--font-sans);
     }
 
     .btn-opml-header:hover {
       background: var(--surface-hover);
-      border-color: var(--text-muted);
+      border-color: var(--border-hover);
     }
 
+    /* Proxy Status Indicator (Hardware Instrument Style) */
     .meta-tag {
-      font-family: var(--font-mono);
       font-size: 12px;
+      font-weight: 500;
       color: var(--text-muted);
       background: var(--surface);
       border: 1px solid var(--border);
       padding: 6px 12px;
       border-radius: var(--radius-sm);
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 8px;
     }
 
-    .meta-tag .dot {
+    .pip-online {
       width: 7px;
       height: 7px;
       border-radius: 50%;
       background: #4ADE80;
+      flex-shrink: 0;
     }
 
-    /* 2-Column App Layout */
+    /* 2-Column Responsive Layout */
     .app-layout {
       display: grid;
-      grid-template-columns: 440px 1fr;
+      grid-template-columns: 420px 1fr;
       gap: 32px;
       align-items: start;
     }
@@ -236,27 +292,28 @@
       }
     }
 
-    /* Settings Panel (Left) */
+    /* Left Column: Filter Settings */
     .panel-settings {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
     }
 
     .settings-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 22px;
+      border-radius: var(--radius-md);
+      padding: 20px;
     }
 
+    /* Authentic Section Titles (No Eyebrows/Kickers) */
     .section-title {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
       margin-bottom: 12px;
+      line-height: 1.3;
     }
 
     .input-field-group {
@@ -277,23 +334,29 @@
       color: var(--text);
       font-family: var(--font-sans);
       font-size: 13px;
-      padding: 10px 14px;
+      padding: 9px 12px;
       border-radius: var(--radius-sm);
-      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      transition: border-color var(--transition-fast);
     }
 
     input[type="text"]:focus {
       outline: none;
       border-color: var(--border-focus);
-      box-shadow: 0 0 0 1px var(--border-focus);
     }
 
     /* Quick Example Chips */
     .chips-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      align-items: center;
+      gap: 6px;
       margin-top: 4px;
+    }
+
+    .chips-label {
+      font-size: 12px;
+      color: var(--text-faint);
+      margin-right: 2px;
     }
 
     .chip-btn {
@@ -302,33 +365,34 @@
       color: var(--text-muted);
       font-size: 12px;
       font-weight: 500;
-      padding: 5px 12px;
-      border-radius: 100px;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
       font-family: var(--font-sans);
     }
 
     .chip-btn:hover {
       color: var(--text);
-      border-color: var(--text-muted);
+      border-color: var(--border-hover);
+      background: var(--surface-hover);
     }
 
-    /* Action Button */
+    /* Action Buttons */
     .btn-action {
       background: var(--accent);
       color: var(--accent-contrast);
       font-weight: 600;
       font-size: 13px;
-      padding: 10px 18px;
+      padding: 9px 16px;
       border-radius: var(--radius-sm);
-      border: none;
+      border: 1px solid transparent;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: background var(--transition-fast), transform var(--transition-fast);
+      transition: background var(--transition-fast);
       white-space: nowrap;
       font-family: var(--font-sans);
     }
@@ -338,49 +402,56 @@
     }
 
     .btn-action:active {
-      transform: scale(0.98);
+      background: var(--accent-active);
     }
 
     .btn-action:disabled {
-      opacity: 0.6;
+      opacity: 0.55;
       cursor: not-allowed;
     }
 
-    /* Presets: Switch Cards */
+    .btn-action.copied {
+      background: var(--tag-clean-text);
+      color: #0C0B0A;
+    }
+
+    /* Filter Presets: Hardware Console Rows */
     .presets-stack {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .preset-card {
       background: var(--surface-subtle);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 14px;
       cursor: pointer;
       user-select: none;
-      transition: all var(--transition-fast);
+      transition: border-color var(--transition-fast), background var(--transition-fast);
     }
 
     .preset-card:hover {
-      border-color: var(--text-faint);
+      border-color: var(--border-hover);
+      background: var(--surface-hover);
     }
 
     .preset-card.active {
-      border-color: var(--accent);
-      background: var(--accent-glow);
+      border-color: var(--border-strong);
+      background: var(--surface-subtle);
     }
 
     .preset-info {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
       flex: 1;
+      min-width: 0;
     }
 
     .preset-header {
@@ -398,38 +469,44 @@
     .preset-counter {
       font-family: var(--font-mono);
       font-size: 12px;
+      font-variant-numeric: tabular-nums;
       background: var(--surface);
       color: var(--text-faint);
       padding: 1px 7px;
-      border-radius: 100px;
+      border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       min-width: 20px;
       text-align: center;
     }
 
     .preset-counter.has-muted {
-      color: var(--badge-muted-text);
-      background: var(--badge-muted-bg);
-      border-color: var(--badge-muted-border);
+      color: var(--tag-muted-text);
+      background: var(--tag-muted-bg);
+      border-color: var(--tag-muted-border);
+      font-weight: 500;
     }
 
     .preset-desc {
       font-size: 12px;
       color: var(--text-muted);
       line-height: 1.4;
+      max-width: 55ch;
+      text-wrap: pretty;
     }
 
-    /* iOS/macOS Style Toggle Switch */
+    /* Physical Recessed Hardware Toggle Switch */
     .switch-toggle {
-      width: 40px;
-      height: 22px;
-      background: var(--border);
-      border-radius: 20px;
+      width: 42px;
+      height: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
       position: relative;
       flex-shrink: 0;
-      transition: background var(--transition-fast);
+      transition: border-color var(--transition-fast), background var(--transition-fast);
       border: none;
       cursor: pointer;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
     }
 
     .switch-toggle::after {
@@ -437,20 +514,40 @@
       position: absolute;
       top: 3px;
       left: 3px;
-      width: 16px;
-      height: 16px;
-      background: #FFFFFF;
+      width: 18px;
+      height: 18px;
+      background: #D8D4CC;
       border-radius: 50%;
-      transition: transform var(--transition-fast);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      transition: transform var(--transition-fast), background var(--transition-fast);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
     }
 
     .preset-card.active .switch-toggle {
-      background: var(--accent);
+      background: #1C1917;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
     }
 
     .preset-card.active .switch-toggle::after {
       transform: translateX(18px);
+      background: var(--accent);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (prefers-color-scheme: light) {
+      .switch-toggle {
+        background: #E4E0D6;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+      }
+      .switch-toggle::after {
+        background: #FFFFFF;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+      .preset-card.active .switch-toggle {
+        background: #D8D2C5;
+      }
+      .preset-card.active .switch-toggle::after {
+        background: var(--accent);
+      }
     }
 
     /* Tag Input Boxes */
@@ -469,32 +566,32 @@
 
     .tag-input-box:focus-within {
       border-color: var(--border-focus);
-      box-shadow: 0 0 0 1px var(--border-focus);
     }
 
     .tag-item {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       background: var(--surface);
       border: 1px solid var(--border);
       color: var(--text);
       font-size: 12px;
       font-family: var(--font-mono);
       padding: 3px 8px;
-      border-radius: 4px;
+      border-radius: 3px;
     }
 
     .tag-remove {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 14px;
       cursor: pointer;
       line-height: 1;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      padding: 0 2px;
+      justify-content: center;
+      padding: 0;
+      transition: color var(--transition-fast);
     }
 
     .tag-remove:hover {
@@ -516,17 +613,26 @@
       outline: none;
     }
 
-    /* Live Feed Preview (Right) */
+    .field-hint {
+      font-size: 12px;
+      color: var(--text-faint);
+      margin-top: 6px;
+      line-height: 1.4;
+      text-wrap: pretty;
+    }
+
+    /* Right Column: Live Feed Stream */
     .panel-preview {
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
 
+    /* Summary Bar & Calibration Gauge */
     .summary-bar {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      border-radius: var(--radius-md);
       padding: 16px 20px;
       display: flex;
       flex-direction: column;
@@ -551,11 +657,12 @@
       font-weight: 600;
     }
 
+    /* Filter Segmented Control */
     .filter-tabs {
-      display: flex;
-      gap: 4px;
+      display: inline-flex;
+      gap: 2px;
       background: var(--surface-subtle);
-      padding: 3px;
+      padding: 2px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
     }
@@ -566,10 +673,10 @@
       color: var(--text-muted);
       font-size: 12px;
       font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 4px;
+      padding: 5px 12px;
+      border-radius: 3px;
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: color var(--transition-fast), background var(--transition-fast);
       font-family: var(--font-sans);
     }
 
@@ -580,35 +687,34 @@
     .tab-pill.active {
       background: var(--surface);
       color: var(--text);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
     }
 
     .progress-track {
-      height: 4px;
+      height: 3px;
       background: var(--surface-subtle);
-      border-radius: 100px;
+      border-radius: 2px;
       overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
-      background: var(--badge-muted-text);
+      background: var(--accent);
       width: 0%;
-      transition: width 300ms ease;
+      transition: width 240ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Feed Items Stream */
+    /* Feed Stream */
     .feed-stream {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
-    /* Clean Article Card */
+    /* World-Class Reading List Article Card */
     .article-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       padding: 18px 20px;
       display: flex;
       flex-direction: column;
@@ -617,7 +723,7 @@
     }
 
     .article-card:hover {
-      border-color: var(--text-faint);
+      border-color: var(--border-hover);
     }
 
     .article-title {
@@ -627,6 +733,9 @@
       color: var(--text);
       text-decoration: none;
       line-height: 1.35;
+      letter-spacing: -0.01em;
+      text-wrap: pretty;
+      transition: color var(--transition-fast);
     }
 
     .article-title:hover {
@@ -642,40 +751,54 @@
       flex-wrap: wrap;
     }
 
+    .article-host {
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .article-date {
+      color: var(--text-faint);
+    }
+
+    /* Ink Status Tags */
     .badge-status {
-      font-family: var(--font-mono);
       font-size: 12px;
       font-weight: 500;
       padding: 2px 8px;
-      border-radius: 4px;
+      border-radius: 3px;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
+      line-height: 1.3;
     }
 
     .badge-status.clean {
-      background: var(--badge-clean-bg);
-      color: var(--badge-clean-text);
-      border: 1px solid var(--badge-clean-border);
+      background: var(--tag-clean-bg);
+      color: var(--tag-clean-text);
+      border: 1px solid var(--tag-clean-border);
     }
 
     .badge-status.muted {
-      background: var(--badge-muted-bg);
-      color: var(--badge-muted-text);
-      border: 1px solid var(--badge-muted-border);
+      background: var(--tag-muted-bg);
+      color: var(--tag-muted-text);
+      border: 1px solid var(--tag-muted-border);
     }
 
-    /* Muted (Collapsed) Row */
+    /* Muted (Console Channel Strip) */
     .muted-row {
-      background: rgba(23, 21, 20, 0.6);
+      background: var(--surface-subtle);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       overflow: hidden;
-      transition: all var(--transition-fast);
+      transition: border-color var(--transition-fast);
+    }
+
+    .muted-row:hover {
+      border-color: var(--border-hover);
     }
 
     .muted-bar {
-      padding: 10px 14px;
+      padding: 9px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -686,7 +809,6 @@
     }
 
     .muted-bar:hover {
-      background: var(--surface-subtle);
       color: var(--text);
     }
 
@@ -697,23 +819,27 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      flex: 1;
+      min-width: 0;
     }
 
     .mute-icon {
       flex-shrink: 0;
-      color: var(--badge-muted-text);
+      color: var(--tag-muted-text);
     }
 
     .muted-preview-title {
+      font-family: var(--font-serif);
+      font-size: 14px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-weight: 500;
-      opacity: 0.85;
+      color: var(--text-muted);
+      opacity: 0.9;
     }
 
     .muted-chevron {
-      font-size: 12px;
+      flex-shrink: 0;
       transition: transform var(--transition-fast);
       color: var(--text-faint);
     }
@@ -724,7 +850,7 @@
 
     .muted-details-body {
       display: none;
-      padding: 14px;
+      padding: 14px 16px;
       border-top: 1px solid var(--border);
       background: var(--surface);
       font-size: 13px;
@@ -735,17 +861,39 @@
     }
 
     .muted-reason-text {
-      color: var(--badge-muted-text);
-      font-size: 13px;
-      margin-bottom: 8px;
+      color: var(--tag-muted-text);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .muted-full-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .muted-full-title a {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .muted-full-title a:hover {
+      color: var(--accent);
+    }
+
+    .muted-full-url {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      word-break: break-all;
     }
 
     /* Skeleton Loading State */
     .skeleton-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px 18px;
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -754,7 +902,7 @@
     .skeleton-line {
       height: 14px;
       background: var(--surface-subtle);
-      border-radius: 4px;
+      border-radius: 2px;
       animation: skeleton-pulse 1.4s ease-in-out infinite;
     }
 
@@ -764,35 +912,25 @@
       100% { opacity: 0.6; }
     }
 
-    /* Empty and Error States */
+    /* State Banners (Empty & Error) */
     .state-banner {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 48px 24px;
+      border-radius: var(--radius-md);
+      padding: 56px 24px;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
-    }
-
-    .state-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: var(--surface-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      margin-bottom: 4px;
+      gap: 10px;
     }
 
     .state-title {
       font-family: var(--font-serif);
       font-size: 24px;
       font-weight: 500;
+      letter-spacing: -0.01em;
+      text-wrap: balance;
     }
 
     .state-desc {
@@ -800,25 +938,26 @@
       color: var(--text-muted);
       max-width: 460px;
       line-height: 1.5;
+      text-wrap: pretty;
     }
 
-    /* Sticky Bottom Bar */
+    /* Sticky Bottom Reader Bar (Authoritative Dock) */
     .bottom-bar {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       z-index: 100;
-      background: rgba(23, 21, 20, 0.90);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(18, 17, 16, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-top: 1px solid var(--border);
-      padding: 14px 20px;
+      padding: 12px 24px;
     }
 
     @media (prefers-color-scheme: light) {
       .bottom-bar {
-        background: rgba(255, 255, 255, 0.94);
+        background: rgba(255, 255, 255, 0.95);
       }
     }
 
@@ -849,7 +988,7 @@
 
     .url-label {
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--text);
       white-space: nowrap;
     }
@@ -862,10 +1001,11 @@
     .url-pill-box {
       font-family: var(--font-mono);
       font-size: 12px;
+      font-variant-numeric: tabular-nums;
       color: var(--accent);
       background: var(--surface-subtle);
       border: 1px solid var(--border);
-      padding: 8px 12px;
+      padding: 7px 12px;
       border-radius: var(--radius-sm);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -878,13 +1018,14 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     .btn-secondary {
       background: var(--surface-subtle);
       border: 1px solid var(--border);
       color: var(--text);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       padding: 8px 14px;
       border-radius: var(--radius-sm);
@@ -893,20 +1034,20 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: all var(--transition-fast);
+      transition: background var(--transition-fast), border-color var(--transition-fast);
       font-family: var(--font-sans);
     }
 
     .btn-secondary:hover {
       background: var(--surface-hover);
-      border-color: var(--text-muted);
+      border-color: var(--border-hover);
     }
 
     /* OPML Modal */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(14, 13, 12, 0.78);
+      background: rgba(12, 11, 10, 0.75);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       display: none;
@@ -923,24 +1064,18 @@
     .modal-dialog {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      border-radius: var(--radius-md);
       width: 100%;
       max-width: 580px;
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
       overflow: hidden;
-      animation: modal-pop 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes modal-pop {
-      from { opacity: 0; transform: scale(0.96) translateY(6px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     .modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 18px 22px;
+      padding: 16px 20px;
       border-bottom: 1px solid var(--border);
     }
 
@@ -948,17 +1083,20 @@
       font-family: var(--font-serif);
       font-size: 20px;
       font-weight: 500;
+      letter-spacing: -0.01em;
     }
 
     .modal-close {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 22px;
       cursor: pointer;
-      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       padding: 4px;
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition-fast);
     }
 
     .modal-close:hover {
@@ -966,7 +1104,7 @@
     }
 
     .modal-body {
-      padding: 22px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -976,16 +1114,17 @@
       font-size: 13px;
       color: var(--text-muted);
       line-height: 1.5;
+      text-wrap: pretty;
     }
 
     .opml-dropzone {
-      border: 2px dashed var(--border);
-      border-radius: var(--radius-md);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
       background: var(--surface-subtle);
       padding: 28px 20px;
       text-align: center;
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: border-color var(--transition-fast), background var(--transition-fast);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -994,7 +1133,7 @@
 
     .opml-dropzone:hover, .opml-dropzone.dragover {
       border-color: var(--accent);
-      background: var(--accent-glow);
+      background: var(--surface-hover);
     }
 
     .opml-dropzone-icon {
@@ -1025,7 +1164,7 @@
     .opml-summary-count {
       font-size: 13px;
       font-weight: 600;
-      color: var(--badge-clean-text);
+      color: var(--tag-clean-text);
     }
 
     .opml-feed-list {
@@ -1044,9 +1183,21 @@
       justify-content: flex-end;
       align-items: center;
       gap: 10px;
-      padding: 16px 22px;
+      padding: 14px 20px;
       border-top: 1px solid var(--border);
       background: var(--surface-subtle);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -1063,10 +1214,10 @@
     <header class="masthead">
       <a href="/" class="brand">
         <div class="brand-mark" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
             <path d="M11 5L6 9H2v6h4l5 4V5z"/>
-            <line x1="23" y1="9" x2="17" y2="15"/>
-            <line x1="17" y1="9" x2="23" y2="15"/>
+            <line x1="22" y1="9" x2="16" y2="15"/>
+            <line x1="16" y1="9" x2="22" y2="15"/>
           </svg>
         </div>
         <div>
@@ -1085,15 +1236,17 @@
 
         <!-- OPML Batch Tool Button -->
         <button class="btn-opml-header" id="btn-open-opml-modal" type="button" aria-haspopup="dialog">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M12 12v9m-4-4 4-4 4 4"/>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
           <span data-i18n="batchOpmlBtn">Batch OPML</span>
         </button>
 
-        <!-- Proxy Meta Badge -->
+        <!-- Proxy Status Pip (Calibrated Instrument) -->
         <div class="meta-tag" title="Local-first RSS proxy engine">
-          <span class="dot"></span>
+          <span class="pip-online" aria-hidden="true"></span>
           <span data-i18n="proxyBadge">RSS Proxy · v1.0.0</span>
         </div>
       </div>
@@ -1102,17 +1255,18 @@
     <!-- Main Layout -->
     <main class="app-layout">
       
-      <!-- Left Column: Settings -->
-      <section class="panel-settings" aria-label="Filter parameters">
-        
-        <!-- Source URL Card -->
+      <!-- Left Column: Filter Parameters -->
+      <section class="panel-settings" aria-labelledby="heading-filter-settings">
+        <h2 id="heading-filter-settings" class="sr-only">Filter Parameters</h2>
+
+        <!-- Feed Source Card -->
         <div class="settings-card">
-          <div class="section-title" data-i18n="sourceSection">Feed Source</div>
+          <h2 class="section-title" data-i18n="sourceSection">Feed Source</h2>
           <div class="input-field-group">
             <div class="text-input-wrap">
               <input type="text" id="feed-url" placeholder="https://news.ycombinator.com/rss" value="https://news.ycombinator.com/rss" aria-label="Feed URL">
               <button class="btn-action" id="btn-fetch" aria-label="Filter feed">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polygon points="5 3 19 12 5 21 5 3"/>
                 </svg>
                 <span data-i18n="filterBtn">Filter</span>
@@ -1120,7 +1274,7 @@
             </div>
             
             <div class="chips-row">
-              <span style="font-size: 12px; color: var(--text-faint); align-self: center; margin-right: 2px;" data-i18n="examplesLabel">Examples:</span>
+              <span class="chips-label" data-i18n="examplesLabel">Examples:</span>
               <button class="chip-btn" type="button" data-url="https://news.ycombinator.com/rss">Hacker News</button>
               <button class="chip-btn" type="button" data-url="https://techcrunch.com/feed/">TechCrunch</button>
               <button class="chip-btn" type="button" data-url="https://www.theverge.com/rss/index.xml">The Verge</button>
@@ -1128,9 +1282,9 @@
           </div>
         </div>
 
-        <!-- Presets Card -->
+        <!-- Filter Presets Card -->
         <div class="settings-card">
-          <div class="section-title" data-i18n="presetsSection">Filter Presets</div>
+          <h2 class="section-title" data-i18n="presetsSection">Filter Presets</h2>
           <div class="presets-stack" id="presets-container">
             
             <!-- Paywalls -->
@@ -1140,7 +1294,7 @@
                   <span class="preset-name" data-i18n="preset_paywalls_name">Block Paywalls</span>
                   <span class="preset-counter" id="count-paywalls">0</span>
                 </div>
-                <div class="preset-desc" data-i18n="preset_paywalls_desc">WSJ, Bloomberg, FT, Caixin, Vedomosti, Forbes, Wired, Medium</div>
+                <p class="preset-desc" data-i18n="preset_paywalls_desc">WSJ, Bloomberg, FT, Caixin, Vedomosti, Forbes, Wired, Medium</p>
               </div>
               <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
             </div>
@@ -1152,7 +1306,7 @@
                   <span class="preset-name" data-i18n="preset_aislop_name">Filter AI Slop</span>
                   <span class="preset-counter" id="count-ai-slop">0</span>
                 </div>
-                <div class="preset-desc" data-i18n="preset_aislop_desc">LLM boilerplate, corporate jargon, and synthetic text cliches</div>
+                <p class="preset-desc" data-i18n="preset_aislop_desc">LLM boilerplate, corporate jargon, and synthetic text cliches</p>
               </div>
               <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
             </div>
@@ -1164,7 +1318,7 @@
                   <span class="preset-name" data-i18n="preset_clickbait_name">Clickbait & Ragebait</span>
                   <span class="preset-counter" id="count-clickbait">0</span>
                 </div>
-                <div class="preset-desc" data-i18n="preset_clickbait_desc">Sensationalist titles, curiosity gaps, ALL CAPS shouting</div>
+                <p class="preset-desc" data-i18n="preset_clickbait_desc">Sensationalist titles, curiosity gaps, ALL CAPS shouting</p>
               </div>
               <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
             </div>
@@ -1176,7 +1330,7 @@
                   <span class="preset-name" data-i18n="preset_sponsored_name">Sponsored Content</span>
                   <span class="preset-counter" id="count-sponsored">0</span>
                 </div>
-                <div class="preset-desc" data-i18n="preset_sponsored_desc">Disguised ads, promoted posts, affiliate marketing roundups</div>
+                <p class="preset-desc" data-i18n="preset_sponsored_desc">Disguised ads, promoted posts, affiliate marketing roundups</p>
               </div>
               <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
             </div>
@@ -1188,7 +1342,7 @@
                   <span class="preset-name" data-i18n="preset_crypto_name">Crypto & Web3 Hype</span>
                   <span class="preset-counter" id="count-crypto-hype">0</span>
                 </div>
-                <div class="preset-desc" data-i18n="preset_crypto_desc">Memecoins, airdrops, tokenomics, NFT speculative noise</div>
+                <p class="preset-desc" data-i18n="preset_crypto_desc">Memecoins, airdrops, tokenomics, NFT speculative noise</p>
               </div>
               <button type="button" class="switch-toggle" tabindex="-1" aria-hidden="true"></button>
             </div>
@@ -1198,30 +1352,31 @@
 
         <!-- Custom Keywords Card (Tag Input) -->
         <div class="settings-card">
-          <div class="section-title" data-i18n="customKeywords">Custom Keywords</div>
+          <h2 class="section-title" data-i18n="customKeywords">Custom Keywords</h2>
           <div class="tag-input-box" id="tag-box-keywords">
             <input type="text" class="tag-inner-input" id="input-keyword-tag" placeholder="Type keyword + Enter (e.g. ai, llm)..." data-i18n-placeholder="customKeywordsPlaceholder">
           </div>
-          <div style="font-size: 12px; color: var(--text-faint); margin-top: 6px;" data-i18n="customKeywordsHint">
+          <p class="field-hint" data-i18n="customKeywordsHint">
             Press Enter or comma to add a keyword tag.
-          </div>
+          </p>
         </div>
 
         <!-- Custom Domains Card (Tag Input) -->
         <div class="settings-card">
-          <div class="section-title" data-i18n="customDomains">Blocked Domains</div>
+          <h2 class="section-title" data-i18n="customDomains">Blocked Domains</h2>
           <div class="tag-input-box" id="tag-box-domains">
             <input type="text" class="tag-inner-input" id="input-domain-tag" placeholder="Type domain + Enter (e.g. medium.com)..." data-i18n-placeholder="customDomainsPlaceholder">
           </div>
-          <div style="font-size: 12px; color: var(--text-faint); margin-top: 6px;" data-i18n="customDomainsHint">
+          <p class="field-hint" data-i18n="customDomainsHint">
             Articles from these sites will be muted regardless of presets.
-          </div>
+          </p>
         </div>
 
       </section>
 
-      <!-- Right Column: Live Feed Preview -->
-      <section class="panel-preview" aria-label="Cleaned feed live preview">
+      <!-- Right Column: Live Feed Stream -->
+      <section class="panel-preview" aria-labelledby="heading-preview-section">
+        <h2 id="heading-preview-section" class="sr-only">Live Feed Preview</h2>
         
         <!-- Summary Bar -->
         <div class="summary-bar" id="summary-bar" style="display: none;" aria-live="polite">
@@ -1243,21 +1398,15 @@
             </div>
           </div>
 
-          <div class="progress-track">
+          <div class="progress-track" aria-hidden="true">
             <div class="progress-fill" id="progress-bar"></div>
           </div>
         </div>
 
-        <!-- Feed List Items -->
+        <!-- Feed List Stream -->
         <div class="feed-stream" id="feed-stream">
           <!-- Initial Empty State -->
           <div class="state-banner" id="empty-state">
-            <div class="state-icon" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-              </svg>
-            </div>
             <h2 class="state-title" data-i18n="emptyTitle">Silence on the air</h2>
             <p class="state-desc" data-i18n="emptyDesc">Enter an RSS feed URL or click an example above to inspect live noise filtering.</p>
           </div>
@@ -1268,13 +1417,13 @@
     </main>
   </div>
 
-  <!-- Sticky Bottom Bar -->
+  <!-- Sticky Bottom Bar (Docked Reader Action Dock) -->
   <footer class="bottom-bar" id="bottom-bar">
     <div class="bottom-bar-inner">
       <div class="url-display-group">
         <div class="url-title-row">
           <span class="url-label" data-i18n="cleanFeedUrl">Subscribe in your RSS Reader:</span>
-          <span class="url-hint" data-i18n="cleanFeedHint">Paste this proxy link into NetNewsWire, Feedly, or Reeder</span>
+          <span class="url-hint" data-i18n="cleanFeedHint">Paste this link into NetNewsWire, Feedly, or Reeder</span>
         </div>
         <div class="url-pill-box" id="bottom-feed-url" title="Clean RSS feed URL for your reader">
           http://localhost:8899/feed?url=https://news.ycombinator.com/rss
@@ -1282,21 +1431,25 @@
       </div>
       <div class="bottom-actions">
         <button class="btn-action" id="btn-copy-url">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
           </svg>
           <span id="btn-copy-text" data-i18n="copyUrl">Copy URL</span>
         </button>
         <a class="btn-secondary" id="btn-open-app" href="#" title="Open in NetNewsWire, Reeder, or default RSS reader">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
           <span data-i18n="openApp">Open in App</span>
         </a>
         <a class="btn-secondary" id="btn-open-reader" href="#" target="_blank" rel="noopener">
           <span data-i18n="openFeed">View XML</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-            <polyline points="15 3 21 3 21 9"/>
-            <line x1="10" y1="14" x2="21" y2="3"/>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
           </svg>
         </a>
       </div>
@@ -1307,8 +1460,13 @@
   <div class="modal-overlay" id="opml-modal" role="dialog" aria-modal="true" aria-labelledby="opml-modal-title">
     <div class="modal-dialog">
       <div class="modal-header">
-        <h3 class="modal-title" id="opml-modal-title" data-i18n="opmlModalTitle">Batch Clean OPML Library</h3>
-        <button class="modal-close" id="btn-close-opml" aria-label="Close dialog">&times;</button>
+        <h2 class="modal-title" id="opml-modal-title" data-i18n="opmlModalTitle">Batch Clean OPML Library</h2>
+        <button class="modal-close" id="btn-close-opml" aria-label="Close dialog">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
       <div class="modal-body">
         <p class="modal-desc" data-i18n="opmlModalDesc">
@@ -1317,7 +1475,7 @@
 
         <div class="opml-dropzone" id="opml-dropzone" tabindex="0" role="button" aria-label="Select OPML file">
           <input type="file" id="opml-file-input" accept=".opml,.xml" style="display: none;">
-          <svg class="opml-dropzone-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="opml-dropzone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="17 8 12 3 7 8"/>
             <line x1="12" y1="3" x2="12" y2="15"/>
@@ -1334,7 +1492,7 @@
       <div class="modal-footer">
         <button class="btn-secondary" id="btn-cancel-opml" type="button" data-i18n="opmlClose">Close</button>
         <button class="btn-action" id="btn-download-opml" type="button" style="display: none;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
             <line x1="12" y1="15" x2="12" y2="3"/>
@@ -1346,7 +1504,7 @@
   </div>
 
   <script>
-    // Internationalization Dictionary
+    // Internationalization Dictionary (Refined Editorial Voice)
     const i18nData = {
       en: {
         tagline: 'Quiet, clean, AI-slop-free RSS feeds',
@@ -1389,7 +1547,7 @@
         errorTitle: 'Failed to load feed',
         retry: 'Retry',
         reasonLabel: 'Filter Reason:',
-        cleanTag: '✓ Clean',
+        cleanTag: 'Clean',
         mutedTag: 'Muted',
         untitled: 'Untitled',
         recently: 'Recently',
@@ -1442,7 +1600,7 @@
         errorTitle: 'Не удалось загрузить ленту',
         retry: 'Повторить попытку',
         reasonLabel: 'Причина заглушения:',
-        cleanTag: '✓ Чисто',
+        cleanTag: 'Чисто',
         mutedTag: 'Заглушено',
         untitled: 'Без названия',
         recently: 'Недавно',
@@ -1495,7 +1653,7 @@
         errorTitle: '加载订阅源失败',
         retry: '重试',
         reasonLabel: '过滤原因：',
-        cleanTag: '✓ 纯净',
+        cleanTag: '纯净',
         mutedTag: '已过滤',
         untitled: '无标题',
         recently: '刚刚',
@@ -1533,6 +1691,7 @@
     const btnCopyUrl = document.getElementById('btn-copy-url');
     const btnCopyText = document.getElementById('btn-copy-text');
     const btnOpenReader = document.getElementById('btn-open-reader');
+    const btnOpenApp = document.getElementById('btn-open-app');
 
     // Language buttons
     const langBtns = document.querySelectorAll('.lang-btn');
@@ -1625,7 +1784,7 @@
         state[stateKey].forEach((tag, idx) => {
           const tagEl = document.createElement('span');
           tagEl.className = 'tag-item';
-          tagEl.innerHTML = `${escapeHtml(tag)} <button type="button" class="tag-remove" aria-label="Remove tag">&times;</button>`;
+          tagEl.innerHTML = `${escapeHtml(tag)} <button type="button" class="tag-remove" aria-label="Remove tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
           tagEl.querySelector('.tag-remove').addEventListener('click', (e) => {
             e.stopPropagation();
             state[stateKey].splice(idx, 1);
@@ -1687,7 +1846,7 @@
       });
     });
 
-    // Generate Clean URL for bottom bar
+    // Generate Clean URL for bottom reader dock
     function updateBottomUrl() {
       const base = window.location.origin + '/feed';
       const params = new URLSearchParams();
@@ -1700,7 +1859,6 @@
       bottomFeedUrl.innerText = cleanUrl;
       bottomFeedUrl.title = cleanUrl;
       btnOpenReader.href = cleanUrl;
-      const btnOpenApp = document.getElementById('btn-open-app');
       if (btnOpenApp) {
         btnOpenApp.href = cleanUrl.replace(/^https?:\/\//, 'feed://');
       }
@@ -1711,10 +1869,10 @@
       const lang = state.lang;
       navigator.clipboard.writeText(bottomFeedUrl.innerText).then(() => {
         btnCopyText.innerText = i18nData[lang].copied;
-        btnCopyUrl.style.background = '#0E6833';
+        btnCopyUrl.classList.add('copied');
         setTimeout(() => {
           btnCopyText.innerText = i18nData[lang].copyUrl;
-          btnCopyUrl.style.background = '';
+          btnCopyUrl.classList.remove('copied');
         }, 2000);
       });
     });
@@ -1757,10 +1915,10 @@
     function renderSkeleton() {
       summaryBar.style.display = 'none';
       feedStream.innerHTML = `
-        <div class="skeleton-card"><div class="skeleton-line" style="width: 70%;"></div><div class="skeleton-line" style="width: 35%;"></div></div>
-        <div class="skeleton-card"><div class="skeleton-line" style="width: 85%;"></div><div class="skeleton-line" style="width: 40%;"></div></div>
-        <div class="skeleton-card"><div class="skeleton-line" style="width: 60%;"></div><div class="skeleton-line" style="width: 30%;"></div></div>
-        <div class="skeleton-card"><div class="skeleton-line" style="width: 75%;"></div><div class="skeleton-line" style="width: 50%;"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width: 72%;"></div><div class="skeleton-line" style="width: 38%;"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width: 86%;"></div><div class="skeleton-line" style="width: 44%;"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width: 64%;"></div><div class="skeleton-line" style="width: 32%;"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width: 78%;"></div><div class="skeleton-line" style="width: 52%;"></div></div>
       `;
     }
 
@@ -1769,16 +1927,9 @@
       summaryBar.style.display = 'none';
       feedStream.innerHTML = `
         <div class="state-banner">
-          <div class="state-icon" style="color: var(--badge-muted-text);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-          </div>
-          <h2 class="state-title">${i18nData[lang].errorTitle}</h2>
+          <h2 class="state-title" style="color: var(--tag-muted-text);">${escapeHtml(i18nData[lang].errorTitle)}</h2>
           <p class="state-desc">${escapeHtml(msg)}</p>
-          <button class="btn-action" style="margin-top: 8px;" onclick="fetchFeedData()">${i18nData[lang].retry}</button>
+          <button class="btn-action" type="button" style="margin-top: 8px;" onclick="fetchFeedData()">${escapeHtml(i18nData[lang].retry)}</button>
         </div>
       `;
     }
@@ -1836,8 +1987,8 @@
       if (items.length === 0) {
         feedStream.innerHTML = `
           <div class="state-banner">
-            <h2 class="state-title">${i18nData[lang].noItemsTitle}</h2>
-            <p class="state-desc">${i18nData[lang].noItemsDesc}</p>
+            <h2 class="state-title">${escapeHtml(i18nData[lang].noItemsTitle)}</h2>
+            <p class="state-desc">${escapeHtml(i18nData[lang].noItemsDesc)}</p>
           </div>
         `;
         return;
@@ -1846,20 +1997,25 @@
       feedStream.innerHTML = '';
       items.forEach(dec => {
         if (dec.kept) {
-          // Render Normal Clean Card
+          // Render Clean Reading List Item
           const card = document.createElement('article');
           card.className = 'article-card';
           card.innerHTML = `
-            <a class="article-title" href="${dec.item.link}" target="_blank" rel="noopener">${escapeHtml(dec.item.title || i18nData[lang].untitled)}</a>
+            <a class="article-title" href="${escapeHtml(dec.item.link)}" target="_blank" rel="noopener">${escapeHtml(dec.item.title || i18nData[lang].untitled)}</a>
             <div class="article-meta">
-              <span class="badge-status clean">${i18nData[lang].cleanTag}</span>
-              <span>${escapeHtml(getHostname(dec.item.link))}</span>
-              <span>${escapeHtml(dec.item.published || i18nData[lang].recently)}</span>
+              <span class="badge-status clean">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>${escapeHtml(i18nData[lang].cleanTag)}</span>
+              </span>
+              <span class="article-host">${escapeHtml(getHostname(dec.item.link))}</span>
+              <span class="article-date">${escapeHtml(dec.item.published || i18nData[lang].recently)}</span>
             </div>
           `;
           feedStream.appendChild(card);
         } else {
-          // Render Collapsed Muted Row (The Mute Bar)
+          // Render Muted Item (Console Channel Strip)
           const row = document.createElement('div');
           row.className = 'muted-row';
           const reasonLabel = dec.reason || i18nData[lang].mutedTag;
@@ -1868,22 +2024,24 @@
           row.innerHTML = `
             <div class="muted-bar" tabindex="0" role="button" aria-expanded="false">
               <div class="muted-info-left">
-                <svg class="mute-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="mute-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M11 5L6 9H2v6h4l5 4V5z"/>
-                  <line x1="23" y1="9" x2="17" y2="15"/>
-                  <line x1="17" y1="9" x2="23" y2="15"/>
+                  <line x1="22" y1="9" x2="16" y2="15"/>
+                  <line x1="16" y1="9" x2="22" y2="15"/>
                 </svg>
                 <span class="badge-status muted">${escapeHtml(reasonLabel)}</span>
                 <span class="muted-preview-title">${escapeHtml(dec.item.title || i18nData[lang].untitled)}</span>
               </div>
-              <span class="muted-chevron">▼</span>
+              <svg class="muted-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
             </div>
             <div class="muted-details-body">
-              <div class="muted-reason-text"><strong>${i18nData[lang].reasonLabel}</strong> ${escapeHtml(reasonLabel)}${escapeHtml(detailLabel)}</div>
-              <div style="font-size: 13px; font-weight: 500; margin-bottom: 6px;">
-                <a href="${dec.item.link}" target="_blank" rel="noopener" style="color: var(--text);">${escapeHtml(dec.item.title || i18nData[lang].untitled)}</a>
+              <div class="muted-reason-text"><strong>${escapeHtml(i18nData[lang].reasonLabel)}</strong> ${escapeHtml(reasonLabel)}${escapeHtml(detailLabel)}</div>
+              <div class="muted-full-title">
+                <a href="${escapeHtml(dec.item.link)}" target="_blank" rel="noopener">${escapeHtml(dec.item.title || i18nData[lang].untitled)}</a>
               </div>
-              <div style="font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">${escapeHtml(dec.item.link)}</div>
+              <div class="muted-full-url">${escapeHtml(dec.item.link)}</div>
             </div>
           `;
 
@@ -1910,6 +2068,7 @@
     }
 
     function escapeHtml(str) {
+      if (!str) return '';
       const div = document.createElement('div');
       div.innerText = str;
       return div.innerHTML;
