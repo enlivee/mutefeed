@@ -39,22 +39,33 @@ type Decision struct {
 	Kept    bool         `json:"kept"`
 	Reason  string       `json:"reason,omitempty"`
 	Details string       `json:"details,omitempty"`
+	Preset  string       `json:"preset,omitempty"`
+}
+
+type keywordRule struct {
+	keyword string
+	preset  string
+}
+
+type regexRule struct {
+	re     *regexp.Regexp
+	preset string
 }
 
 // Engine executes filtering rules
 type Engine struct {
 	opts         Options
-	blockDomains map[string]bool
-	keywords     []string
+	blockDomains map[string]string // domain -> preset ID
+	keywords     []keywordRule
 	allowWords   []string
-	regexes      []*regexp.Regexp
+	regexes      []regexRule
 }
 
 // NewEngine initializes a filter engine
 func NewEngine(opts Options) (*Engine, error) {
 	e := &Engine{
 		opts:         opts,
-		blockDomains: make(map[string]bool),
+		blockDomains: make(map[string]string),
 	}
 
 	// 1. Process Presets
@@ -64,15 +75,20 @@ func NewEngine(opts Options) (*Engine, error) {
 			continue
 		}
 		for _, d := range p.Domains {
-			e.blockDomains[strings.ToLower(strings.TrimSpace(d))] = true
+			e.blockDomains[strings.ToLower(strings.TrimSpace(d))] = pid
 		}
-		e.keywords = append(e.keywords, p.Keywords...)
+		for _, kw := range p.Keywords {
+			kwNorm := strings.ToLower(strings.TrimSpace(kw))
+			if kwNorm != "" {
+				e.keywords = append(e.keywords, keywordRule{keyword: kwNorm, preset: pid})
+			}
+		}
 		for _, rStr := range p.Regexes {
 			re, err := regexp.Compile(rStr)
 			if err != nil {
 				return nil, fmt.Errorf("invalid regex in preset %s: %w", pid, err)
 			}
-			e.regexes = append(e.regexes, re)
+			e.regexes = append(e.regexes, regexRule{re: re, preset: pid})
 		}
 		if p.CheckSlop {
 			e.opts.FilterSlop = true
@@ -83,7 +99,9 @@ func NewEngine(opts Options) (*Engine, error) {
 	for _, d := range opts.BlockDomains {
 		d = strings.ToLower(strings.TrimSpace(d))
 		if d != "" {
-			e.blockDomains[d] = true
+			if _, exists := e.blockDomains[d]; !exists {
+				e.blockDomains[d] = "custom"
+			}
 		}
 	}
 
@@ -91,7 +109,7 @@ func NewEngine(opts Options) (*Engine, error) {
 	for _, kw := range opts.BlockKeywords {
 		kw = strings.ToLower(strings.TrimSpace(kw))
 		if kw != "" {
-			e.keywords = append(e.keywords, kw)
+			e.keywords = append(e.keywords, keywordRule{keyword: kw, preset: "custom"})
 		}
 	}
 
@@ -112,7 +130,7 @@ func NewEngine(opts Options) (*Engine, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid custom regex %q: %w", rStr, err)
 		}
-		e.regexes = append(e.regexes, re)
+		e.regexes = append(e.regexes, regexRule{re: re, preset: "custom"})
 	}
 
 	if e.opts.SlopThreshold <= 0 {
@@ -163,6 +181,7 @@ func (e *Engine) Evaluate(item *gofeed.Item) Decision {
 				Kept:    false,
 				Reason:  "Allowlist miss",
 				Details: "Did not contain required keywords",
+				Preset:  "allowlist",
 			}
 		}
 	}
@@ -172,13 +191,14 @@ func (e *Engine) Evaluate(item *gofeed.Item) Decision {
 		u, err := url.Parse(item.Link)
 		if err == nil {
 			host := strings.ToLower(u.Hostname())
-			for blocked := range e.blockDomains {
+			for blocked, preset := range e.blockDomains {
 				if host == blocked || strings.HasSuffix(host, "."+blocked) {
 					return Decision{
 						Item:    item,
 						Kept:    false,
 						Reason:  "Blocked domain",
 						Details: fmt.Sprintf("Matches %s", blocked),
+						Preset:  preset,
 					}
 				}
 			}
@@ -186,25 +206,27 @@ func (e *Engine) Evaluate(item *gofeed.Item) Decision {
 	}
 
 	// 3. Check Block Keywords
-	for _, kw := range e.keywords {
-		if strings.Contains(fullText, kw) {
+	for _, kr := range e.keywords {
+		if strings.Contains(fullText, kr.keyword) {
 			return Decision{
 				Item:    item,
 				Kept:    false,
 				Reason:  "Blocked keyword",
-				Details: fmt.Sprintf("Matches %q", kw),
+				Details: fmt.Sprintf("Matches %q", kr.keyword),
+				Preset:  kr.preset,
 			}
 		}
 	}
 
 	// 4. Check Regexes
-	for _, re := range e.regexes {
-		if re.MatchString(title) || re.MatchString(desc) {
+	for _, rr := range e.regexes {
+		if rr.re.MatchString(title) || rr.re.MatchString(desc) {
 			return Decision{
 				Item:    item,
 				Kept:    false,
 				Reason:  "Blocked pattern",
-				Details: fmt.Sprintf("Matches regex %s", re.String()),
+				Details: fmt.Sprintf("Matches regex %s", rr.re.String()),
+				Preset:  rr.preset,
 			}
 		}
 	}
@@ -218,6 +240,7 @@ func (e *Engine) Evaluate(item *gofeed.Item) Decision {
 				Kept:    false,
 				Reason:  "AI Slop / Clickbait",
 				Details: fmt.Sprintf("Score %.2f (triggers: %s)", score, strings.Join(triggers, ", ")),
+				Preset:  "ai-slop",
 			}
 		}
 	}
@@ -244,6 +267,7 @@ func (e *Engine) FilterFeed(feed *gofeed.Feed) ([]*gofeed.Item, []Decision) {
 				Kept:    false,
 				Reason:  "Duplicate",
 				Details: "Duplicate link in feed",
+				Preset:  "duplicate",
 			})
 			continue
 		}

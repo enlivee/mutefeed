@@ -834,17 +834,29 @@
 
     .url-display-group {
       display: flex;
-      align-items: center;
-      gap: 12px;
+      flex-direction: column;
+      gap: 4px;
       flex: 1;
-      min-width: 260px;
+      min-width: 280px;
+    }
+
+    .url-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     .url-label {
       font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
+      font-weight: 700;
+      color: var(--text);
       white-space: nowrap;
+    }
+
+    .url-hint {
+      font-size: 12px;
+      color: var(--text-muted);
     }
 
     .url-pill-box {
@@ -858,7 +870,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      flex: 1;
       direction: rtl;
       text-align: left;
     }
@@ -1261,7 +1272,10 @@
   <footer class="bottom-bar" id="bottom-bar">
     <div class="bottom-bar-inner">
       <div class="url-display-group">
-        <span class="url-label" data-i18n="cleanFeedUrl">Clean Feed URL:</span>
+        <div class="url-title-row">
+          <span class="url-label" data-i18n="cleanFeedUrl">Subscribe in your RSS Reader:</span>
+          <span class="url-hint" data-i18n="cleanFeedHint">Paste this proxy link into NetNewsWire, Feedly, or Reeder</span>
+        </div>
         <div class="url-pill-box" id="bottom-feed-url" title="Clean RSS feed URL for your reader">
           http://localhost:8899/feed?url=https://news.ycombinator.com/rss
         </div>
@@ -1274,8 +1288,11 @@
           </svg>
           <span id="btn-copy-text" data-i18n="copyUrl">Copy URL</span>
         </button>
+        <a class="btn-secondary" id="btn-open-app" href="#" title="Open in NetNewsWire, Reeder, or default RSS reader">
+          <span data-i18n="openApp">Open in App</span>
+        </a>
         <a class="btn-secondary" id="btn-open-reader" href="#" target="_blank" rel="noopener">
-          <span data-i18n="openFeed">Open feed</span>
+          <span data-i18n="openFeed">View XML</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
             <polyline points="15 3 21 3 21 9"/>
@@ -1363,10 +1380,12 @@
         emptyDesc: 'Enter an RSS feed URL or click an example above to inspect live noise filtering.',
         noItemsTitle: 'No articles match',
         noItemsDesc: 'Under current filter criteria, no articles were found in this view.',
-        cleanFeedUrl: 'Clean Feed URL:',
+        cleanFeedUrl: 'Subscribe in your RSS Reader:',
+        cleanFeedHint: 'Paste this link into NetNewsWire, Feedly, or Reeder',
         copyUrl: 'Copy URL',
         copied: 'Copied!',
-        openFeed: 'Open feed',
+        openApp: 'Open in App',
+        openFeed: 'View XML',
         errorTitle: 'Failed to load feed',
         retry: 'Retry',
         reasonLabel: 'Filter Reason:',
@@ -1414,10 +1433,12 @@
         emptyDesc: 'Введите ссылку на RSS-ленту или кликните пример выше, чтобы увидеть фильтрацию в реальном времени.',
         noItemsTitle: 'Здесь ничего нет',
         noItemsDesc: 'По заданным условиям ни одна статья не попала в эту категорию.',
-        cleanFeedUrl: 'Ссылка на чистую ленту:',
+        cleanFeedUrl: 'Ссылка для вашего RSS-ридера:',
+        cleanFeedHint: 'Вставьте этот URL в NetNewsWire, Feedly или Reeder',
         copyUrl: 'Копировать URL',
         copied: 'Скопировано!',
-        openFeed: 'Открыть ленту',
+        openApp: 'Открыть в приложении',
+        openFeed: 'Открыть XML',
         errorTitle: 'Не удалось загрузить ленту',
         retry: 'Повторить попытку',
         reasonLabel: 'Причина заглушения:',
@@ -1465,10 +1486,12 @@
         emptyDesc: '在上方输入 RSS 链接或点击示例，即可实时查看内容过滤效果。',
         noItemsTitle: '无符合文章',
         noItemsDesc: '在当前过滤条件下，该视图暂无文章。',
-        cleanFeedUrl: '纯净订阅源地址：',
+        cleanFeedUrl: '订阅到您的 RSS 阅读器：',
+        cleanFeedHint: '将此链接添加到 NetNewsWire、Feedly 或 Reeder 中',
         copyUrl: '复制地址',
         copied: '已复制!',
-        openFeed: '打开订阅源',
+        openApp: '在应用中打开',
+        openFeed: '查看 XML',
         errorTitle: '加载订阅源失败',
         retry: '重试',
         reasonLabel: '过滤原因：',
@@ -1677,6 +1700,10 @@
       bottomFeedUrl.innerText = cleanUrl;
       bottomFeedUrl.title = cleanUrl;
       btnOpenReader.href = cleanUrl;
+      const btnOpenApp = document.getElementById('btn-open-app');
+      if (btnOpenApp) {
+        btnOpenApp.href = cleanUrl.replace(/^https?:\/\//, 'feed://');
+      }
     }
 
     // Copy Button with 2s Confirmation

@@ -24,18 +24,41 @@ type cachedFeed struct {
 // Server handles HTTP requests
 type Server struct {
 	cfg       *config.Config
+	version   string
+	startTime time.Time
 	cache     map[string]cachedFeed
 	cacheLock sync.RWMutex
 	cacheTTL  time.Duration
+	limiter   *IPRateLimiter
+	metrics   *Metrics
 }
 
 // NewServer creates a new MuteFeed server
 func NewServer(cfg *config.Config) *Server {
 	return &Server{
-		cfg:      cfg,
-		cache:    make(map[string]cachedFeed),
-		cacheTTL: 5 * time.Minute,
+		cfg:       cfg,
+		version:   "1.0.0",
+		startTime: time.Now(),
+		cache:     make(map[string]cachedFeed),
+		cacheTTL:  5 * time.Minute,
+		limiter:   NewIPRateLimiter(60, 10), // 60 requests/minute, burst 10
+		metrics:   NewMetrics(feed.DefaultFeedCache()),
 	}
+}
+
+// SetVersion sets server version
+func (s *Server) SetVersion(v string) {
+	s.version = v
+}
+
+// Limiter returns the active IPRateLimiter
+func (s *Server) Limiter() *IPRateLimiter {
+	return s.limiter
+}
+
+// Metrics returns the active Metrics collector
+func (s *Server) Metrics() *Metrics {
+	return s.metrics
 }
 
 // Routes sets up standard HTTP routes
@@ -51,6 +74,11 @@ func (s *Server) Routes() http.Handler {
 	// API endpoints
 	mux.HandleFunc("/api/test", s.handleTest)
 	mux.HandleFunc("/api/presets", s.handlePresets)
+	mux.HandleFunc("/api/stats", s.handleStats)
+
+	// Observability & Health endpoints
+	mux.HandleFunc("/healthz", s.handleHealthz)
+	mux.HandleFunc("/metrics", s.handleMetrics)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
@@ -61,6 +89,17 @@ func (s *Server) Routes() http.Handler {
 
 // handleFeed returns the cleaned RSS XML
 func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
+	s.metrics.RecordRequest()
+
+	// Apply Rate Limiting per Client IP
+	rl := s.limiter.Allow(r)
+	rl.SetHeaders(w)
+	if !rl.Allowed {
+		s.metrics.RecordRateLimitExceeded()
+		http.Error(w, "Rate limit exceeded. Please retry later.", http.StatusTooManyRequests)
+		return
+	}
+
 	feedURL := strings.TrimSpace(r.URL.Query().Get("url"))
 	name := strings.TrimSpace(r.URL.Query().Get("name"))
 
@@ -95,19 +134,22 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 
 	cacheKey := r.URL.RequestURI()
 
-	// Check Cache
+	// Check Server Response Cache
 	s.cacheLock.RLock()
 	cached, found := s.cache[cacheKey]
 	s.cacheLock.RUnlock()
 
 	if found && time.Since(cached.timestamp) < s.cacheTTL {
+		s.metrics.RecordCacheHit()
 		w.Header().Set("Content-Type", "application/rss+xml; charset=utf-8")
 		w.Header().Set("X-Cache", "HIT")
 		w.Write([]byte(cached.content))
 		return
 	}
 
-	// Fetch upstream feed
+	s.metrics.RecordCacheMiss()
+
+	// Fetch upstream feed (utilizes ETag and 304 conditional request caching)
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
 
@@ -124,7 +166,14 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kept, _ := engine.FilterFeed(parsedFeed)
+	s.metrics.RecordFeedProcessed()
+	kept, decisions := engine.FilterFeed(parsedFeed)
+	for _, dec := range decisions {
+		s.metrics.RecordArticleEvaluated()
+		if !dec.Kept {
+			s.metrics.RecordArticleMuted(dec.Preset)
+		}
+	}
 
 	// Generate clean RSS
 	selfURL := r.URL.String()
@@ -149,6 +198,17 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 
 // handleTest processes a feed and returns JSON analysis of kept vs blocked items
 func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
+	s.metrics.RecordRequest()
+
+	// Apply Rate Limiting per Client IP
+	rl := s.limiter.Allow(r)
+	rl.SetHeaders(w)
+	if !rl.Allowed {
+		s.metrics.RecordRateLimitExceeded()
+		s.jsonError(w, "Rate limit exceeded. Please retry later.", http.StatusTooManyRequests)
+		return
+	}
+
 	feedURL := strings.TrimSpace(r.URL.Query().Get("url"))
 	if feedURL == "" {
 		s.jsonError(w, "Missing 'url' query parameter", http.StatusBadRequest)
@@ -181,7 +241,14 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.metrics.RecordFeedProcessed()
 	_, decisions := engine.FilterFeed(parsedFeed)
+	for _, dec := range decisions {
+		s.metrics.RecordArticleEvaluated()
+		if !dec.Kept {
+			s.metrics.RecordArticleMuted(dec.Preset)
+		}
+	}
 
 	resp := map[string]interface{}{
 		"title":       parsedFeed.Title,
@@ -197,8 +264,43 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
 
 // handlePresets returns available presets as JSON
 func (s *Server) handlePresets(w http.ResponseWriter, r *http.Request) {
+	s.metrics.RecordRequest()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(filter.BuiltinPresets)
+}
+
+// handleHealthz returns lightweight JSON uptime and status
+func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {
+	s.metrics.RecordRequest()
+	uptime := time.Since(s.startTime)
+	resp := map[string]interface{}{
+		"status":         "ok",
+		"uptime":         uptime.Truncate(time.Second).String(),
+		"uptime_seconds": int64(uptime.Seconds()),
+		"version":        s.version,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+// handleStats returns detailed application metrics in JSON format
+func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
+	s.metrics.RecordRequest()
+	snap := s.metrics.Snapshot(s.version)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(snap)
+}
+
+// handleMetrics returns Prometheus-formatted metrics (or JSON if requested)
+func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
+	s.metrics.RecordRequest()
+	if r.URL.Query().Get("format") == "json" || strings.Contains(r.Header.Get("Accept"), "application/json") {
+		s.handleStats(w, r)
+		return
+	}
+	promText := s.metrics.PrometheusString(s.version)
+	w.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+	w.Write([]byte(promText))
 }
 
 func (s *Server) jsonError(w http.ResponseWriter, msg string, code int) {
