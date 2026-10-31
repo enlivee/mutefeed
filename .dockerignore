@@ -1,0 +1,9 @@
+mutefeed
+.git
+.gitignore
+.impeccable
+.gemini
+.codex
+.cursor
+*.log
+*.md

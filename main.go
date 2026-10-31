@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/stillunbuilt/mutefeed/internal/config"
@@ -87,6 +88,16 @@ func runServerCommand() {
 		args = args[1:]
 	}
 	_ = fs.Parse(args)
+
+	// Check environment variable overrides (standard in cloud environments like Render/Fly/Heroku)
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		if p, err := strconv.Atoi(envPort); err == nil {
+			port = p
+		}
+	}
+	if envHost := os.Getenv("HOST"); envHost != "" {
+		host = envHost
+	}
 
 	cfg, err := config.LoadConfig(configPath)
 	if err != nil {

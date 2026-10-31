@@ -24,8 +24,21 @@ var rssLinkRegexAlt = regexp.MustCompile(`(?i)<link[^>]+href=["']([^"']+)["'][^>
 // FetchFeed downloads and parses an RSS, Atom or JSON feed from a URL,
 // and automatically discovers the RSS feed if a regular website HTML page was given.
 func FetchFeed(ctx context.Context, feedURL string) (*gofeed.Feed, error) {
+	feedURL = strings.TrimSpace(feedURL)
 	if !strings.HasPrefix(feedURL, "http://") && !strings.HasPrefix(feedURL, "https://") {
 		feedURL = "https://" + feedURL
+	}
+
+	// Smart Reddit URL handler: convert subreddit URLs to their canonical .rss endpoint
+	if strings.Contains(feedURL, "reddit.com/r/") && !strings.HasSuffix(feedURL, ".rss") && !strings.Contains(feedURL, ".rss?") {
+		parsedU, err := url.Parse(feedURL)
+		if err == nil {
+			path := strings.TrimRight(parsedU.Path, "/")
+			if !strings.HasSuffix(path, ".rss") {
+				parsedU.Path = path + "/.rss"
+				feedURL = parsedU.String()
+			}
+		}
 	}
 
 	bodyBytes, err := fetchBytes(ctx, feedURL)
@@ -75,7 +88,7 @@ func fetchBytes(ctx context.Context, targetURL string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 MuteFeed/1.0")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1")
 	req.Header.Set("Accept", "application/rss+xml, application/atom+xml, application/xml, text/xml, text/html, */*")
 
 	resp, err := defaultClient.Do(req)
