@@ -1,0 +1,35 @@
+name: Keepalive
+
+on:
+  schedule:
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  keepalive:
+    name: Keep Free Tier Warm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /healthz Endpoint
+        env:
+          APP_URL_VAR: ${{ vars.APP_URL }}
+          APP_URL_SECRET: ${{ secrets.APP_URL }}
+        run: |
+          # Resolve target base URL (vars.APP_URL > secrets.APP_URL > fallback)
+          BASE_URL="${APP_URL_VAR:-${APP_URL_SECRET:-https://mutefeed.onrender.com}}"
+          BASE_URL="${BASE_URL%/}"
+
+          # Ensure endpoint points to /healthz
+          if [[ "$BASE_URL" == */healthz ]]; then
+            TARGET_URL="$BASE_URL"
+          else
+            TARGET_URL="${BASE_URL}/healthz"
+          fi
+
+          echo "Pinging MuteFeed keepalive endpoint: $TARGET_URL"
+          RESPONSE=$(curl -fsS --retry 2 --retry-delay 5 --connect-timeout 15 --max-time 60 "$TARGET_URL")
+          echo "Health check response: $RESPONSE"
+          echo "Render instance is active and warm."

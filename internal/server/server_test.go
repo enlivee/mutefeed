@@ -44,6 +44,7 @@ func setupTestServer(t *testing.T) (*Server, *httptest.Server) {
 		w.Write([]byte(mockFeedXML))
 	}))
 	t.Cleanup(upstream.Close)
+	t.Cleanup(feed.ResetHTTPClient)
 
 	// Configure HTTP client for feed package to use test client
 	feed.SetHTTPClient(upstream.Client())

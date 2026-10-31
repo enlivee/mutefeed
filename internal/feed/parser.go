@@ -3,12 +3,15 @@ package feed
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -17,17 +20,164 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-var defaultClient = &http.Client{
-	Timeout: 12 * time.Second,
+// ErrSSRFBlocked is returned when a request targets a private or internal IP address.
+var ErrSSRFBlocked = errors.New("request to private or internal IP address is blocked")
+
+var (
+	awsMetadataIP  = net.ParseIP("169.254.169.254")
+	_, cgnatNet, _ = net.ParseCIDR("100.64.0.0/10")
+)
+
+// IsBlockedIP returns true if ip is private, loopback, link-local, multicast,
+// unspecified (0.0.0.0 / ::), cloud metadata (169.254.169.254), or CGNAT.
+func IsBlockedIP(ip net.IP) bool {
+	if ip == nil {
+		return true
+	}
+
+	// Normalize IPv4-mapped IPv6 addresses (e.g. ::ffff:127.0.0.1)
+	if v4 := ip.To4(); v4 != nil {
+		ip = v4
+	}
+
+	if ip.IsLoopback() ||
+		ip.IsPrivate() ||
+		ip.IsLinkLocalUnicast() ||
+		ip.IsLinkLocalMulticast() ||
+		ip.IsUnspecified() ||
+		ip.IsMulticast() {
+		return true
+	}
+
+	if ip.Equal(awsMetadataIP) {
+		return true
+	}
+
+	if cgnatNet != nil && cgnatNet.Contains(ip) {
+		return true
+	}
+
+	return false
 }
+
+// SafeDialContext returns a dialing function for net/http.Transport that resolves
+// the target host and prevents connection attempts to private or internal IP addresses.
+func SafeDialContext(dialer *net.Dialer) func(ctx context.Context, network, addr string) (net.Conn, error) {
+	return func(ctx context.Context, network, addr string) (net.Conn, error) {
+		host, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			return nil, err
+		}
+
+		var ips []net.IP
+		if ip := net.ParseIP(host); ip != nil {
+			ips = []net.IP{ip}
+		} else {
+			ips, err = net.DefaultResolver.LookupIP(ctx, "ip", host)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if len(ips) == 0 {
+			return nil, fmt.Errorf("no IP address found for %s", host)
+		}
+
+		for _, ip := range ips {
+			if IsBlockedIP(ip) {
+				return nil, ErrSSRFBlocked
+			}
+		}
+
+		var firstErr error
+		for _, ip := range ips {
+			target := net.JoinHostPort(ip.String(), port)
+			conn, err := dialer.DialContext(ctx, network, target)
+			if err == nil {
+				return conn, nil
+			}
+			if firstErr == nil {
+				firstErr = err
+			}
+		}
+		return nil, firstErr
+	}
+}
+
+// NewSafeTransport returns an http.Transport configured with SSRF protection on dialing.
+func NewSafeTransport() *http.Transport {
+	dialer := &net.Dialer{
+		Timeout:   10 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+
+	return &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		DialContext:           SafeDialContext(dialer),
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+}
+
+func newDefaultClient() *http.Client {
+	return &http.Client{
+		Timeout:   12 * time.Second,
+		Transport: NewSafeTransport(),
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 10 {
+				return errors.New("stopped after 10 redirects")
+			}
+			if err := ValidateURL(req.URL.String()); err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+}
+
+var defaultSafeClient = newDefaultClient()
+var defaultClient = defaultSafeClient
 
 var clientMu sync.RWMutex
 
-// SetHTTPClient configures the default HTTP client used for fetching feeds
+var (
+	allowPrivateIPs   bool
+	allowPrivateIPsMu sync.RWMutex
+)
+
+// SetAllowPrivateIPs enables or disables private/internal IP access (used in tests).
+func SetAllowPrivateIPs(allow bool) {
+	allowPrivateIPsMu.Lock()
+	defer allowPrivateIPsMu.Unlock()
+	allowPrivateIPs = allow
+}
+
+// IsPrivateIPAllowed returns whether private/internal IP access is currently permitted.
+func IsPrivateIPAllowed() bool {
+	allowPrivateIPsMu.RLock()
+	defer allowPrivateIPsMu.RUnlock()
+	return allowPrivateIPs
+}
+
+func isSSRFEnforced(client *http.Client) bool {
+	if IsPrivateIPAllowed() {
+		return false
+	}
+	return client == defaultSafeClient
+}
+
+// SetHTTPClient configures the HTTP client used for fetching feeds
 func SetHTTPClient(c *http.Client) {
 	clientMu.Lock()
 	defer clientMu.Unlock()
-	defaultClient = c
+	if c == nil {
+		defaultClient = defaultSafeClient
+	} else {
+		defaultClient = c
+	}
 }
 
 // GetHTTPClient returns the current HTTP client
@@ -36,6 +186,101 @@ func GetHTTPClient() *http.Client {
 	defer clientMu.RUnlock()
 	return defaultClient
 }
+
+// DefaultHTTPClient returns the default safe HTTP client
+func DefaultHTTPClient() *http.Client {
+	return defaultSafeClient
+}
+
+// ResetHTTPClient restores the default safe HTTP client
+func ResetHTTPClient() {
+	clientMu.Lock()
+	defer clientMu.Unlock()
+	defaultClient = defaultSafeClient
+}
+
+// ValidateURL validates that rawURL has an http or https scheme and that its hostname
+// does not resolve to a private, loopback, link-local, AWS metadata, or internal IP address.
+func ValidateURL(rawURL string) error {
+	rawURL = strings.TrimSpace(rawURL)
+	if rawURL == "" {
+		return fmt.Errorf("%w: empty URL", ErrSSRFBlocked)
+	}
+
+	urlToCheck := rawURL
+	if !strings.Contains(urlToCheck, "://") {
+		urlToCheck = "https://" + urlToCheck
+	}
+
+	parsed, err := url.Parse(urlToCheck)
+	if err != nil {
+		return fmt.Errorf("%w: invalid URL format: %v", ErrSSRFBlocked, err)
+	}
+
+	scheme := strings.ToLower(parsed.Scheme)
+	if scheme != "http" && scheme != "https" {
+		return fmt.Errorf("%w: unsupported scheme %q (only http and https allowed)", ErrSSRFBlocked, scheme)
+	}
+
+	hostname := parsed.Hostname()
+	if hostname == "" {
+		return fmt.Errorf("%w: missing host", ErrSSRFBlocked)
+	}
+
+	// 1. Literal IP check
+	if ip := net.ParseIP(hostname); ip != nil {
+		if IsBlockedIP(ip) {
+			return ErrSSRFBlocked
+		}
+		return nil
+	}
+
+	// 2. Integer/decimal IPv4 literal check (e.g. 2130706433 -> 127.0.0.1)
+	if n, parseErr := strconv.ParseUint(hostname, 10, 32); parseErr == nil {
+		ip := net.IPv4(byte(n>>24), byte(n>>16), byte(n>>8), byte(n))
+		if IsBlockedIP(ip) {
+			return ErrSSRFBlocked
+		}
+		return nil
+	}
+
+	// 3. Resolve hostname via net.LookupIP
+	ips, err := net.LookupIP(hostname)
+	if err != nil {
+		return fmt.Errorf("failed to resolve host %q: %w", hostname, err)
+	}
+	if len(ips) == 0 {
+		return fmt.Errorf("%w: host %q did not resolve to any IP address", ErrSSRFBlocked, hostname)
+	}
+
+	for _, ip := range ips {
+		if IsBlockedIP(ip) {
+			return ErrSSRFBlocked
+		}
+	}
+
+	return nil
+}
+
+func validateScheme(rawURL string) error {
+	rawURL = strings.TrimSpace(rawURL)
+	if rawURL == "" {
+		return fmt.Errorf("%w: empty URL", ErrSSRFBlocked)
+	}
+	if !strings.Contains(rawURL, "://") {
+		return nil
+	}
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("%w: invalid URL format: %v", ErrSSRFBlocked, err)
+	}
+	scheme := strings.ToLower(parsed.Scheme)
+	if scheme != "http" && scheme != "https" {
+		return fmt.Errorf("%w: unsupported scheme %q (only http and https allowed)", ErrSSRFBlocked, scheme)
+	}
+	return nil
+}
+
 
 // FeedCacheEntry stores cached upstream feed and HTTP conditional headers
 type FeedCacheEntry struct {
@@ -165,7 +410,17 @@ var rssLinkRegexAlt = regexp.MustCompile(`(?i)<link[^>]+href=["']([^"']+)["'][^>
 // utilizing HTTP ETag and If-Modified-Since conditional requests to receive 304 Not Modified
 // and reusing previously parsed feeds when content has not changed.
 func FetchFeed(ctx context.Context, feedURL string) (*gofeed.Feed, error) {
-	return FetchFeedWithClient(ctx, GetHTTPClient(), defaultFeedCache, feedURL)
+	client := GetHTTPClient()
+	if isSSRFEnforced(client) {
+		if err := ValidateURL(feedURL); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := validateScheme(feedURL); err != nil {
+			return nil, err
+		}
+	}
+	return FetchFeedWithClient(ctx, client, defaultFeedCache, feedURL)
 }
 
 // FetchFeedWithClient allows specifying an explicit HTTP client and feed cache.
@@ -175,6 +430,16 @@ func FetchFeedWithClient(ctx context.Context, client *http.Client, cache *FeedCa
 	}
 	if cache == nil {
 		cache = defaultFeedCache
+	}
+
+	if isSSRFEnforced(client) {
+		if err := ValidateURL(feedURL); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := validateScheme(feedURL); err != nil {
+			return nil, err
+		}
 	}
 
 	feedURL = strings.TrimSpace(feedURL)
@@ -209,6 +474,11 @@ func FetchFeedWithClient(ctx context.Context, client *http.Client, cache *FeedCa
 	if isHTML || len(bodyBytes) > 0 {
 		discoveredURL := discoverFeedURL(string(bodyBytes), targetURL)
 		if discoveredURL != "" && discoveredURL != targetURL {
+			if isSSRFEnforced(client) {
+				if err := ValidateURL(discoveredURL); err != nil {
+					return nil, err
+				}
+			}
 			discFeed, _, _, discErr := fetchAndParse(ctx, client, cache, feedURL, discoveredURL)
 			if discErr == nil && discFeed != nil {
 				if entry, ok := cache.Get(discoveredURL); ok {

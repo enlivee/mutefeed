@@ -2,7 +2,9 @@ package feed
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -178,3 +180,137 @@ func TestFeedCacheConcurrency(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestSSRFProtection(t *testing.T) {
+	ctx := context.Background()
+
+	// Ensure clean default client state
+	ResetHTTPClient()
+	SetAllowPrivateIPs(false)
+
+	// 1. URLs explicitly required to be blocked with ErrSSRFBlocked
+	requiredBlocked := []string{
+		"http://127.0.0.1:8899",
+		"http://localhost",
+		"http://169.254.169.254",
+		"http://10.0.0.1",
+	}
+
+	for _, rawURL := range requiredBlocked {
+		t.Run("required_blocked_"+rawURL, func(t *testing.T) {
+			// ValidateURL safety check must return ErrSSRFBlocked
+			valErr := ValidateURL(rawURL)
+			if !errors.Is(valErr, ErrSSRFBlocked) {
+				t.Errorf("ValidateURL(%q) err = %v, want ErrSSRFBlocked", rawURL, valErr)
+			}
+
+			// FetchFeed must return ErrSSRFBlocked
+			_, fetchErr := FetchFeed(ctx, rawURL)
+			if !errors.Is(fetchErr, ErrSSRFBlocked) {
+				t.Errorf("FetchFeed(%q) err = %v, want ErrSSRFBlocked", rawURL, fetchErr)
+			}
+		})
+	}
+
+	// 2. Additional internal network and private probing vectors
+	additionalBlocked := []string{
+		"http://172.16.0.1",
+		"http://172.31.255.255",
+		"http://192.168.0.1",
+		"http://192.168.1.254",
+		"http://0.0.0.0",
+		"http://0.0.0.0:8899",
+		"http://[::1]",
+		"http://[::1]:8080",
+		"http://[::ffff:127.0.0.1]",
+		"http://100.64.0.1",
+		"http://2130706433", // decimal 127.0.0.1
+		"ftp://news.ycombinator.com/rss",
+		"file:///etc/passwd",
+		"gopher://127.0.0.1:70",
+	}
+
+	for _, rawURL := range additionalBlocked {
+		t.Run("extra_blocked_"+rawURL, func(t *testing.T) {
+			valErr := ValidateURL(rawURL)
+			if !errors.Is(valErr, ErrSSRFBlocked) {
+				t.Errorf("ValidateURL(%q) err = %v, want ErrSSRFBlocked", rawURL, valErr)
+			}
+
+			_, fetchErr := FetchFeed(ctx, rawURL)
+			if !errors.Is(fetchErr, ErrSSRFBlocked) {
+				t.Errorf("FetchFeed(%q) err = %v, want ErrSSRFBlocked", rawURL, fetchErr)
+			}
+		})
+	}
+
+	// 3. Legitimate public URLs must pass the safety check
+	legitimatePublicURLs := []string{
+		"https://news.ycombinator.com/rss",
+		"https://techcrunch.com/feed/",
+		"http://93.184.216.34/feed", // example.com IP literal
+	}
+
+	for _, rawURL := range legitimatePublicURLs {
+		t.Run("public_allowed_"+rawURL, func(t *testing.T) {
+			if err := ValidateURL(rawURL); err != nil {
+				t.Errorf("ValidateURL(%q) unexpected error: %v", rawURL, err)
+			}
+		})
+	}
+}
+
+func TestIsBlockedIP(t *testing.T) {
+	testCases := []struct {
+		ip      string
+		blocked bool
+	}{
+		// Loopback
+		{"127.0.0.1", true},
+		{"127.0.0.2", true},
+		{"::1", true},
+		{"::ffff:127.0.0.1", true},
+
+		// RFC 1918 Private
+		{"10.0.0.1", true},
+		{"10.255.255.254", true},
+		{"172.16.0.1", true},
+		{"172.31.255.255", true},
+		{"192.168.0.1", true},
+		{"192.168.1.1", true},
+
+		// Link-Local and Cloud Metadata
+		{"169.254.169.254", true},
+		{"169.254.1.1", true},
+		{"fe80::1", true},
+
+		// Unspecified and Multicast
+		{"0.0.0.0", true},
+		{"::", true},
+		{"224.0.0.1", true},
+		{"ff02::1", true},
+
+		// CGNAT
+		{"100.64.0.1", true},
+		{"100.127.255.255", true},
+
+		// Public IP addresses (should NOT be blocked)
+		{"93.184.216.34", false},
+		{"8.8.8.8", false},
+		{"1.1.1.1", false},
+		{"209.216.230.207", false},
+	}
+
+	for _, tc := range testCases {
+		ip := net.ParseIP(tc.ip)
+		if ip == nil {
+			t.Fatalf("failed to parse IP: %s", tc.ip)
+		}
+		got := IsBlockedIP(ip)
+		if got != tc.blocked {
+			t.Errorf("IsBlockedIP(%s) = %v, want %v", tc.ip, got, tc.blocked)
+		}
+	}
+}
+
+
