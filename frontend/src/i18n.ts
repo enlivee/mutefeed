@@ -37,6 +37,15 @@ export interface Translations {
   opmlDropTitle: string;
   opmlDropDesc: string;
   opmlDownloadBtn: string;
+  readerModalTitle: string;
+  readerModalDesc: string;
+  desktopReader: string;
+  desktopReaderHint: string;
+  feedlyWeb: string;
+  feedlyHint: string;
+  inoreaderWeb: string;
+  inoreaderHint: string;
+  manualReaderHint: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -77,6 +86,15 @@ export const translations: Record<Language, Translations> = {
     opmlDropTitle: 'Drop your subscriptions.opml here',
     opmlDropDesc: 'Export from NetNewsWire, Feedly, or Reeder. We rewrite every feed to your filtered proxy URL.',
     opmlDownloadBtn: 'Download Clean OPML',
+    readerModalTitle: 'Subscribe in RSS Reader',
+    readerModalDesc: 'Add this filtered feed to your preferred desktop or web reader:',
+    desktopReader: 'Desktop Reader (NetNewsWire, Reeder)',
+    desktopReaderHint: 'Uses the system feed:// protocol (launches installed app)',
+    feedlyWeb: 'Feedly (Web)',
+    feedlyHint: 'Open and subscribe in Feedly',
+    inoreaderWeb: 'Inoreader (Web)',
+    inoreaderHint: 'Open and subscribe in Inoreader',
+    manualReaderHint: 'For Miniflux, FreshRSS, Thunderbird, or any other reader, copy the clean URL below:',
   },
   ru: {
     tagline: 'Тихие, чистые RSS-ленты без нейрослопа и кликбейта',
@@ -115,6 +133,15 @@ export const translations: Record<Language, Translations> = {
     opmlDropTitle: 'Перетащите сюда файл subscriptions.opml',
     opmlDropDesc: 'Экспортируйте из ридера. Мы перезапишем все подписки на отфильтрованные прокси-потоки.',
     opmlDownloadBtn: 'Скачать чистый OPML',
+    readerModalTitle: 'Подписка в RSS-ридере',
+    readerModalDesc: 'Добавьте очищенную ленту в ваш любимый десктопный или веб-ридер:',
+    desktopReader: 'Десктопное приложение (NetNewsWire, Reeder)',
+    desktopReaderHint: 'Использует системный протокол feed:// для запуска программы',
+    feedlyWeb: 'Feedly (Веб)',
+    feedlyHint: 'Открыть и добавить ленту в аккаунт Feedly',
+    inoreaderWeb: 'Inoreader (Веб)',
+    inoreaderHint: 'Открыть и добавить ленту в аккаунт Inoreader',
+    manualReaderHint: 'Для Miniflux, FreshRSS, Thunderbird и других ридеров скопируйте чистый URL ниже:',
   },
   zh: {
     tagline: '安静、纯净、无 AI 废话的 RSS 订阅源',
@@ -153,5 +180,14 @@ export const translations: Record<Language, Translations> = {
     opmlDropTitle: '拖拽您的 subscriptions.opml 到此处',
     opmlDropDesc: '从阅读器导出 OPML 文件，我们将所有源一键转换为纯净代理地址。',
     opmlDownloadBtn: '下载纯净 OPML',
+    readerModalTitle: '订阅到 RSS 阅读器',
+    readerModalDesc: '将此纯净源添加到您的桌面或网页阅读器：',
+    desktopReader: '桌面阅读器 (NetNewsWire, Reeder)',
+    desktopReaderHint: '使用系统 feed:// 协议（唤起已安装的客户端）',
+    feedlyWeb: 'Feedly (网页版)',
+    feedlyHint: '打开并添加到 Feedly 账号',
+    inoreaderWeb: 'Inoreader (网页版)',
+    inoreaderHint: '打开并添加到 Inoreader 账号',
+    manualReaderHint: '对于 Miniflux、FreshRSS、Thunderbird 等其他阅读器，请直接复制下方链接：',
   },
 };

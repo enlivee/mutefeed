@@ -110,7 +110,10 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [badgeModalOpen, setBadgeModalOpen] = useState(false);
   const [opmlModalOpen, setOpmlModalOpen] = useState(false);
+  const [readerModalOpen, setReaderModalOpen] = useState(false);
   const [badgeCopied, setBadgeCopied] = useState(false);
+  const [modalCopied, setModalCopied] = useState(false);
+  const [desktopLaunched, setDesktopLaunched] = useState(false);
 
   const t = translations[lang];
 
@@ -253,6 +256,13 @@ export default function App() {
     navigator.clipboard.writeText(cleanProxyUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleLaunchDesktop = () => {
+    navigator.clipboard.writeText(cleanProxyUrl);
+    setDesktopLaunched(true);
+    window.location.href = openInAppUrl;
+    setTimeout(() => setDesktopLaunched(false), 3000);
   };
 
   const toggleExpand = (idx: number) => {
@@ -590,14 +600,14 @@ export default function App() {
             <button className="btn-primary" onClick={handleCopyUrl}>
               {copied ? t.copied : t.copyUrl}
             </button>
-            <a href={openInAppUrl} className="btn-secondary">
+            <button className="btn-secondary" onClick={() => setReaderModalOpen(true)}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
               {t.openApp}
-            </a>
+            </button>
             <a href={cleanProxyUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary">
               {t.viewXml}
             </a>
@@ -694,6 +704,85 @@ export default function App() {
             >
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{t.opmlDropTitle}</div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Click to browse or drop file</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reader Subscribe Modal */}
+      {readerModalOpen && (
+        <div className="modal-overlay" onClick={() => setReaderModalOpen(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">{t.readerModalTitle}</h2>
+              <span className="modal-close" onClick={() => setReaderModalOpen(false)}>✕</span>
+            </div>
+            <p className="modal-desc">{t.readerModalDesc}</p>
+
+            <div className="reader-options-list">
+              {/* Desktop App (feed://) */}
+              <button className="reader-option-row" onClick={handleLaunchDesktop}>
+                <div className="reader-option-content">
+                  <div className="reader-option-title">
+                    <span>🖥️</span> {t.desktopReader}
+                  </div>
+                  <div className="reader-option-desc">{t.desktopReaderHint}</div>
+                </div>
+                <span className="reader-option-tag">
+                  {desktopLaunched ? '✓ ' + t.copied : 'Launch ↗'}
+                </span>
+              </button>
+
+              {/* Feedly (Web) */}
+              <a
+                className="reader-option-row"
+                href={`https://feedly.com/i/subscription/feed/${encodeURIComponent(cleanProxyUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="reader-option-content">
+                  <div className="reader-option-title">
+                    <span>🟢</span> {t.feedlyWeb}
+                  </div>
+                  <div className="reader-option-desc">{t.feedlyHint}</div>
+                </div>
+                <span className="reader-option-tag">Open ↗</span>
+              </a>
+
+              {/* Inoreader (Web) */}
+              <a
+                className="reader-option-row"
+                href={`https://www.inoreader.com/?add_feed=${encodeURIComponent(cleanProxyUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="reader-option-content">
+                  <div className="reader-option-title">
+                    <span>🔵</span> {t.inoreaderWeb}
+                  </div>
+                  <div className="reader-option-desc">{t.inoreaderHint}</div>
+                </div>
+                <span className="reader-option-tag">Open ↗</span>
+              </a>
+            </div>
+
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                {t.manualReaderHint}
+              </div>
+              <div className="code-box">
+                <code>{cleanProxyUrl}</code>
+                <button
+                  className="tool-btn"
+                  onClick={() => {
+                    navigator.clipboard.writeText(cleanProxyUrl);
+                    setModalCopied(true);
+                    setTimeout(() => setModalCopied(false), 2000);
+                  }}
+                >
+                  {modalCopied ? t.copied : t.copyUrl}
+                </button>
+              </div>
             </div>
           </div>
         </div>
