@@ -655,3 +655,52 @@ func TestServerSSRFBlockedEndpoint(t *testing.T) {
 		t.Fatalf("expected 403 Forbidden for SSRF target on /api/test, got %d: %s", wTest.Code, wTest.Body.String())
 	}
 }
+
+func TestFeedETagAnd304NotModified(t *testing.T) {
+	srv, upstream := setupTestServer(t)
+	srv.limiter.SetEnabled(false)
+	handler := srv.Routes()
+
+	feedURL := fmt.Sprintf("/feed?url=%s", upstream.URL)
+
+	// 1. Initial request (200 OK + ETag generated)
+	req1 := httptest.NewRequest("GET", feedURL, nil)
+	w1 := httptest.NewRecorder()
+	handler.ServeHTTP(w1, req1)
+
+	if w1.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d", w1.Code)
+	}
+
+	etag := w1.Header().Get("ETag")
+	if etag == "" {
+		t.Fatalf("expected non-empty ETag header in response")
+	}
+
+	// 2. Conditional request with matching If-None-Match (Must return 304 Not Modified)
+	req2 := httptest.NewRequest("GET", feedURL, nil)
+	req2.Header.Set("If-None-Match", etag)
+	w2 := httptest.NewRecorder()
+	handler.ServeHTTP(w2, req2)
+
+	if w2.Code != http.StatusNotModified {
+		t.Fatalf("expected 304 Not Modified when ETag matches, got %d", w2.Code)
+	}
+	if w2.Body.Len() > 0 {
+		t.Errorf("expected empty body on 304 Not Modified, got %d bytes", w2.Body.Len())
+	}
+
+	// 3. Conditional request with non-matching ETag (Must return 200 OK from cache)
+	req3 := httptest.NewRequest("GET", feedURL, nil)
+	req3.Header.Set("If-None-Match", `"non-matching-etag"`)
+	w3 := httptest.NewRecorder()
+	handler.ServeHTTP(w3, req3)
+
+	if w3.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK when ETag does not match, got %d", w3.Code)
+	}
+	if w3.Header().Get("X-Cache") != "HIT" {
+		t.Errorf("expected X-Cache: HIT, got %s", w3.Header().Get("X-Cache"))
+	}
+}
+

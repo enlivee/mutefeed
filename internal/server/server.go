@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,6 +25,7 @@ import (
 
 type cachedFeed struct {
 	content   string
+	etag      string
 	timestamp time.Time
 }
 
@@ -191,6 +193,25 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 		s.metrics.RecordCacheHit()
 		w.Header().Set("Content-Type", "application/rss+xml; charset=utf-8")
 		w.Header().Set("X-Cache", "HIT")
+		if cached.etag != "" {
+			w.Header().Set("ETag", cached.etag)
+		}
+		w.Header().Set("Last-Modified", cached.timestamp.UTC().Format(http.TimeFormat))
+
+		// Check Conditional HTTP Request (ETag / If-None-Match)
+		if match := r.Header.Get("If-None-Match"); match != "" {
+			if match == cached.etag || match == "*" {
+				w.WriteHeader(http.StatusNotModified)
+				return
+			}
+		}
+		if since := r.Header.Get("If-Modified-Since"); since != "" {
+			if t, err := http.ParseTime(since); err == nil && !cached.timestamp.After(t.Add(time.Second)) {
+				w.WriteHeader(http.StatusNotModified)
+				return
+			}
+		}
+
 		w.Write([]byte(cached.content))
 		return
 	}
@@ -268,16 +289,32 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Generate ETag from content hash
+	hash := sha256.Sum256([]byte(rssXML))
+	etag := fmt.Sprintf(`"%x"`, hash[:16])
+	now := time.Now()
+
 	// Update cache
 	s.cacheLock.Lock()
 	s.cache[cacheKey] = cachedFeed{
 		content:   rssXML,
-		timestamp: time.Now(),
+		etag:      etag,
+		timestamp: now,
 	}
 	s.cacheLock.Unlock()
 
 	w.Header().Set("Content-Type", "application/rss+xml; charset=utf-8")
 	w.Header().Set("X-Cache", "MISS")
+	w.Header().Set("ETag", etag)
+	w.Header().Set("Last-Modified", now.UTC().Format(http.TimeFormat))
+
+	if match := r.Header.Get("If-None-Match"); match != "" {
+		if match == etag || match == "*" {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+	}
+
 	w.Write([]byte(rssXML))
 }
 
