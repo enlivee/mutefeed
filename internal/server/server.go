@@ -8,8 +8,11 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -34,11 +37,12 @@ type Server struct {
 	cacheTTL  time.Duration
 	limiter   *IPRateLimiter
 	metrics   *Metrics
+	worker    *Worker
 }
 
 // NewServer creates a new MuteFeed server
 func NewServer(cfg *config.Config) *Server {
-	return &Server{
+	s := &Server{
 		cfg:       cfg,
 		version:   "1.0.0",
 		startTime: time.Now(),
@@ -47,6 +51,16 @@ func NewServer(cfg *config.Config) *Server {
 		limiter:   NewIPRateLimiter(60, 10), // 60 requests/minute, burst 10
 		metrics:   NewMetrics(feed.DefaultFeedCache()),
 	}
+
+	workerInterval := 15 * time.Minute
+	if env := os.Getenv("WORKER_INTERVAL"); env != "" {
+		if d, err := time.ParseDuration(env); err == nil && d > 0 {
+			workerInterval = d
+		}
+	}
+	s.worker = NewWorker(s, workerInterval)
+
+	return s
 }
 
 // SetVersion sets server version
@@ -62,6 +76,32 @@ func (s *Server) Limiter() *IPRateLimiter {
 // Metrics returns the active Metrics collector
 func (s *Server) Metrics() *Metrics {
 	return s.metrics
+}
+
+// Worker returns the background cache warmup worker
+func (s *Server) Worker() *Worker {
+	return s.worker
+}
+
+// SetCachedFeed stores content into server cache safely
+func (s *Server) SetCachedFeed(key, content string) {
+	s.cacheLock.Lock()
+	defer s.cacheLock.Unlock()
+	s.cache[key] = cachedFeed{
+		content:   content,
+		timestamp: time.Now(),
+	}
+}
+
+// GetCachedFeed retrieves cached content if present and not expired
+func (s *Server) GetCachedFeed(key string) (string, bool) {
+	s.cacheLock.RLock()
+	defer s.cacheLock.RUnlock()
+	cached, found := s.cache[key]
+	if !found || time.Since(cached.timestamp) >= s.cacheTTL {
+		return "", false
+	}
+	return cached.content, true
 }
 
 // Routes sets up standard HTTP routes
@@ -528,9 +568,40 @@ func splitAndTrim(s string) []string {
 	return result
 }
 
-// Start begins listening on the configured address
+// Start begins listening on the configured address and runs the background cache worker
 func (s *Server) Start() error {
 	addr := fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
 	log.Printf("MuteFeed listening on http://%s\n", addr)
-	return http.ListenAndServe(addr, s.Routes())
+
+	httpServer := &http.Server{
+		Addr:    addr,
+		Handler: s.Routes(),
+	}
+
+	if s.worker != nil {
+		s.worker.Start()
+		defer s.worker.Stop()
+	}
+
+	serverErrors := make(chan error, 1)
+	go func() {
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErrors <- err
+		}
+	}()
+
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case err := <-serverErrors:
+		return fmt.Errorf("http server error: %w", err)
+
+	case sig := <-shutdown:
+		log.Printf("Caught signal %v: initiating graceful shutdown\n", sig)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		return httpServer.Shutdown(ctx)
+	}
 }

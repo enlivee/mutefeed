@@ -21,6 +21,8 @@ type Metrics struct {
 	cacheHits             uint64
 	cacheMisses           uint64
 	rateLimitsExceeded    uint64
+	workerPollsTotal      uint64
+	lastWorkerRun         time.Time
 	mu                    sync.RWMutex
 	articlesMutedByPreset map[string]uint64
 	feedCache             *feed.FeedCache
@@ -79,6 +81,14 @@ func (m *Metrics) RecordRateLimitExceeded() {
 	atomic.AddUint64(&m.rateLimitsExceeded, 1)
 }
 
+// RecordWorkerPoll records that the background poller completed a warmup cycle
+func (m *Metrics) RecordWorkerPoll() {
+	atomic.AddUint64(&m.workerPollsTotal, 1)
+	m.mu.Lock()
+	m.lastWorkerRun = time.Now()
+	m.mu.Unlock()
+}
+
 // StatsSnapshot represents a point-in-time metrics state
 type StatsSnapshot struct {
 	Status                  string            `json:"status"`
@@ -97,6 +107,8 @@ type StatsSnapshot struct {
 	UpstreamFullFetches     uint64            `json:"upstream_full_fetches"`
 	UpstreamHitRatio        float64           `json:"upstream_hit_ratio"`
 	RateLimitsExceeded      uint64            `json:"rate_limits_exceeded"`
+	WorkerPollsTotal        uint64            `json:"worker_polls_total"`
+	LastWorkerRun           string            `json:"last_worker_run,omitempty"`
 }
 
 // Snapshot returns a point-in-time snapshot of metrics
@@ -107,6 +119,10 @@ func (m *Metrics) Snapshot(version string) StatsSnapshot {
 	presetCopy := make(map[string]uint64, len(m.articlesMutedByPreset))
 	for k, v := range m.articlesMutedByPreset {
 		presetCopy[k] = v
+	}
+	lastRunStr := ""
+	if !m.lastWorkerRun.IsZero() {
+		lastRunStr = m.lastWorkerRun.UTC().Format(time.RFC3339)
 	}
 	m.mu.RUnlock()
 
@@ -141,6 +157,8 @@ func (m *Metrics) Snapshot(version string) StatsSnapshot {
 		UpstreamFullFetches:     up200,
 		UpstreamHitRatio:        upRatio,
 		RateLimitsExceeded:      atomic.LoadUint64(&m.rateLimitsExceeded),
+		WorkerPollsTotal:        atomic.LoadUint64(&m.workerPollsTotal),
+		LastWorkerRun:           lastRunStr,
 	}
 }
 
@@ -209,7 +227,11 @@ func (m *Metrics) PrometheusString(version string) string {
 
 	sb.WriteString("# HELP mutefeed_rate_limits_exceeded_total Total 429 Too Many Requests responses\n")
 	sb.WriteString("# TYPE mutefeed_rate_limits_exceeded_total counter\n")
-	sb.WriteString(fmt.Sprintf("mutefeed_rate_limits_exceeded_total %d\n", snap.RateLimitsExceeded))
+	sb.WriteString(fmt.Sprintf("mutefeed_rate_limits_exceeded_total %d\n\n", snap.RateLimitsExceeded))
+
+	sb.WriteString("# HELP mutefeed_worker_polls_total Total background warmup polling cycles completed\n")
+	sb.WriteString("# TYPE mutefeed_worker_polls_total counter\n")
+	sb.WriteString(fmt.Sprintf("mutefeed_worker_polls_total %d\n", snap.WorkerPollsTotal))
 
 	return sb.String()
 }

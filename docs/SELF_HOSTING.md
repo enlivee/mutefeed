@@ -149,6 +149,17 @@ mutefeed check https://www.bloomberg.com/news/articles/example
 
 ---
 
+## Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `8899` | HTTP port to bind |
+| `HOST` | `0.0.0.0` | Host address to bind |
+| `WORKER_INTERVAL` | `15m` | Background cache warmup interval (e.g. `10m`, `15m`, `30m`) |
+| `METRICS_FILE` | *none* | Path to write Prometheus metrics snapshot file |
+
+---
+
 ## Configuration (`config.yaml`)
 
 You can define preset feeds and custom filter rules in a local `config.yaml`:
