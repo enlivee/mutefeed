@@ -23,3 +23,10 @@ mutefeed
 node_modules/
 frontend/node_modules/
 frontend/dist/
+
+# AI Assistant Configs (Local only)
+AGENTS.md
+GEMINI.md
+.agents/
+
+
