@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&display=swap');
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    width: 1270px;
+    height: 760px;
+    background: #0B0F17;
+    color: #F1F5F9;
+    font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 48px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(229, 133, 60, 0.12);
+    border: 1px solid rgba(229, 133, 60, 0.3);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #E5853C;
+    font-size: 22px;
+  }
+  .brand-title {
+    font-family: 'Newsreader', serif;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #F8FAFC;
+    line-height: 1;
+  }
+  .brand-sub {
+    font-size: 14px;
+    color: #8E9CAE;
+    margin-top: 4px;
+  }
+
+  .badge-pill {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34D399;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
+    margin: 16px 0;
+  }
+
+  .feature-card {
+    background: #111722;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .feature-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .feature-icon {
+    font-size: 24px;
+  }
+  .feature-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #F1F5F9;
+    font-family: 'Newsreader', serif;
+  }
+  .feature-desc {
+    font-size: 13px;
+    color: #94A3B8;
+    line-height: 1.5;
+  }
+  .feature-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #E5853C;
+    background: rgba(229, 133, 60, 0.08);
+    padding: 4px 8px;
+    border-radius: 4px;
+    align-self: flex-start;
+  }
+
+  .footer-bar {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tech-stack {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #94A3B8;
+    font-size: 13px;
+  }
+  .tech-item {
+    color: #F1F5F9;
+    font-weight: 600;
+  }
+  .github-pill {
+    font-family: 'JetBrains Mono', monospace;
+    color: #CBD5E1;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="brand">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <div class="brand-title">High-Performance Architecture</div>
+        <div class="brand-sub">Zero bloat, sub-10ms response, transparent proxying</div>
+      </div>
+    </div>
+    <div class="badge-pill">🛡️ 100% Deterministic · Zero AI Hallucinations</div>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-top">
+        <span class="feature-icon">🤖</span>
+        <span class="feature-title">Multilingual Slop Filter</span>
+      </div>
+      <div class="feature-desc">
+        Catches synthetic boilerplate and LLM clichés across English, Russian, and Chinese using Unicode-aware RE2 heuristics.
+      </div>
+      <span class="feature-code">"in today's landscape" · "delve into" · "нейросеть"</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-top">
+        <span class="feature-icon">🚫</span>
+        <span class="feature-title">Paywall & Tracking Sanitizer</span>
+      </div>
+      <div class="feature-desc">
+        Silences truncated teaser stubs from Bloomberg, WSJ, Forbes, Wired, and strips UTM, fbclid, and affiliate trackers from all URLs.
+      </div>
+      <span class="feature-code">WSJ · Bloomberg · Wired · Medium · 10+ ad parameters</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-top">
+        <span class="feature-icon">📦</span>
+        <span class="feature-title">Batch OPML Cleaner</span>
+      </div>
+      <div class="feature-desc">
+        Export your OPML from Feedly or NetNewsWire, drop it in, and download a filtered OPML file with all feeds routed through MuteFeed in seconds.
+      </div>
+      <span class="feature-code">1-click drag & drop · Preserves folders & feed names</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-top">
+        <span class="feature-icon">⚡</span>
+        <span class="feature-title">Single Standalone Binary</span>
+      </div>
+      <div class="feature-desc">
+        Written in pure Go standard library with embedded React 19 UI. Operates with in-memory TTL cache, zero SQL database, and &lt; 15MB RAM.
+      </div>
+      <span class="feature-code">Go 1.24 · 15,000 req/sec · 15MB binary · Docker &lt; 20MB</span>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <div class="tech-stack">
+      <span>Runs anywhere:</span>
+      <span class="tech-item">Docker</span>
+      <span>•</span>
+      <span class="tech-item">Homebrew (macOS)</span>
+      <span>•</span>
+      <span class="tech-item">Linux Daemon</span>
+      <span>•</span>
+      <span class="tech-item">Render / Fly.io</span>
+    </div>
+    <div class="github-pill">
+      <span>★ enlivee/mutefeed on GitHub</span>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&display=swap');
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    width: 1270px;
+    height: 760px;
+    background: #0B0F17;
+    color: #F1F5F9;
+    font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding: 48px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(229, 133, 60, 0.12);
+    border: 1px solid rgba(229, 133, 60, 0.3);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #E5853C;
+    font-size: 22px;
+  }
+  .brand-title {
+    font-family: 'Newsreader', serif;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #F8FAFC;
+    line-height: 1;
+  }
+  .brand-sub {
+    font-size: 14px;
+    color: #8E9CAE;
+    margin-top: 4px;
+  }
+
+  .badge-pill {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34D399;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
+    margin: 16px 0;
+  }
+
+  .feature-card {
+    background: #111722;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .feature-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .feature-icon {
+    font-size: 24px;
+  }
+  .feature-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #F1F5F9;
+    font-family: 'Newsreader', serif;
+  }
+  .feature-desc {
+    font-size: 13px;
+    color: #94A3B8;
+    line-height: 1.5;
+  }
+  .feature-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #E5853C;
+    background: rgba(229, 133, 60, 0.08);
+    padding: 4px 8px;
+    border-radius: 4px;
+    align-self: flex-start;
+  }
+
+  .footer-bar {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tech-stack {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #94A3B8;
+    font-size: 13px;
+  }
+  .tech-item {
+    color: #F1F5F9;
+    font-weight: 600;
+  }
+  .github-pill {
+    font-family: 'JetBrains Mono', monospace;
+    color: #CBD5E1;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="brand">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <div class="brand-title">Высокопроизводительная Архитектура</div>
+        <div class="brand-sub">Полная прозрачность, нулевой оверхед, ответ &lt; 10 мс</div>
+      </div>
+    </div>
+    <div class="badge-pill">🛡️ 100% Детерминизм · Без AI-галлюцинаций</div>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-top">
+        <span class="feature-icon">🤖</span>
+        <span class="feature-title">Мультиязычный фильтр нейрослопа</span>
+      </div>
+      <div class="feature-desc">
+        Детектирует воду и штампы генеративных моделей на русском, английском и китайском с поддержкой Unicode-границ RE2.
+      </div>
+      <span class="feature-code">"в реалиях современного" · "delve into" · "нейросеть перевернула"</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-top">
+        <span class="feature-icon">🚫</span>
+        <span class="feature-title">Блокировка пейволлов и очистка URL</span>
+      </div>
+      <div class="feature-desc">
+        Вырезает платные обрубки от Ведомостей, Forbes, WSJ, Bloomberg, Medium и очищает ссылки от трекеров и UTM-мусора.
+      </div>
+      <span class="feature-code">Forbes · Ведомости · WSJ · Medium · 10+ рекламных параметров</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-top">
+        <span class="feature-icon">📦</span>
+        <span class="feature-title">Пакетный очиститель OPML</span>
+      </div>
+      <div class="feature-desc">
+        Экспортируйте файл подписок из Feedly или NetNewsWire, перетащите в MuteFeed и скачайте чистый OPML за 1 секунду.
+      </div>
+      <span class="feature-code">1 клик Drag & Drop · Сохраняет папки и названия лент</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-top">
+        <span class="feature-icon">⚡</span>
+        <span class="feature-title">Один автономный Go-бинарник</span>
+      </div>
+      <div class="feature-desc">
+        Написан на стандартной библиотеке Go с встроенным интерфейсом React 19. Кэш в RAM, никаких баз данных и &lt; 15 МБ памяти.
+      </div>
+      <span class="feature-code">Go 1.24 · 15 000 запр/сек · 15 МБ бинарник · Docker &lt; 20 МБ</span>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <div class="tech-stack">
+      <span>Запуск везде:</span>
+      <span class="tech-item">Docker</span>
+      <span>•</span>
+      <span class="tech-item">Homebrew (macOS)</span>
+      <span>•</span>
+      <span class="tech-item">Linux</span>
+      <span>•</span>
+      <span class="tech-item">Render / Облако</span>
+    </div>
+    <div class="github-pill">
+      <span>★ enlivee/mutefeed на GitHub</span>
+    </div>
+  </div>
+
+</body>
+</html>

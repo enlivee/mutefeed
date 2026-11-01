@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&display=swap');
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    width: 1270px;
+    height: 760px;
+    background: #0B0F17;
+    color: #F1F5F9;
+    font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 48px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(229, 133, 60, 0.12);
+    border: 1px solid rgba(229, 133, 60, 0.3);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #E5853C;
+    font-size: 22px;
+  }
+  .brand-title {
+    font-family: 'Newsreader', serif;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #F8FAFC;
+    line-height: 1;
+  }
+  .brand-sub {
+    font-size: 14px;
+    color: #8E9CAE;
+    margin-top: 4px;
+  }
+
+  .badge-pill {
+    background: rgba(229, 133, 60, 0.15);
+    border: 1px solid rgba(229, 133, 60, 0.35);
+    color: #E5853C;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin: 20px 0;
+  }
+
+  .card {
+    background: #111722;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .card-bad {
+    border-color: rgba(239, 68, 68, 0.25);
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, #111722 100%);
+  }
+  .card-good {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.06) 0%, #111722 100%);
+  }
+
+  .card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .card-bad .card-title { color: #F87171; }
+  .card-good .card-title { color: #34D399; }
+
+  .feed-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+  .item-title {
+    color: #CBD5E1;
+    font-family: 'Newsreader', serif;
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 420px;
+  }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .tag-muted {
+    background: rgba(239, 68, 68, 0.15);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  .tag-clean {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .footer-bar {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .readers-list {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: #94A3B8;
+    font-size: 13px;
+  }
+  .reader-name {
+    color: #F1F5F9;
+    font-weight: 600;
+  }
+  .stat-highlight {
+    font-family: 'JetBrains Mono', monospace;
+    color: #E5853C;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="brand">
+      <div class="logo-icon">🔇</div>
+      <div>
+        <div class="brand-title">MuteFeed Comparison</div>
+        <div class="brand-sub">Noise-cancelling proxy between the open web and your RSS reader</div>
+      </div>
+    </div>
+    <div class="badge-pill">⚡ 15,000 req/sec · &lt;10ms latency</div>
+  </div>
+
+  <div class="main-grid">
+    <!-- Unfiltered -->
+    <div class="card card-bad">
+      <div class="card-title">
+        <span>❌ Raw Feeds (Noise & Slop)</span>
+        <span style="font-size: 12px; opacity: 0.8;">Standard RSS</span>
+      </div>
+      <div class="feed-items">
+        <div class="item">
+          <span class="item-title">"In today's fast-paced world, AI is revolutionizing..."</span>
+          <span class="tag tag-muted">AI Slop</span>
+        </div>
+        <div class="item">
+          <span class="item-title">You Won't Believe What Tim Cook Just Announced</span>
+          <span class="tag tag-muted">Clickbait</span>
+        </div>
+        <div class="item">
+          <span class="item-title">Fed Signals Rate Shift [Read full article for $39/mo]</span>
+          <span class="tag tag-muted">Paywall</span>
+        </div>
+        <div class="item">
+          <span class="item-title">Top 10 Crypto Tokens Ready to Explode 100x Tonight</span>
+          <span class="tag tag-muted">Web3 Hype</span>
+        </div>
+        <div class="item">
+          <span class="item-title">article?utm_source=rss&utm_medium=track&fbclid=...</span>
+          <span class="tag tag-muted">Tracking</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtered by MuteFeed -->
+    <div class="card card-good">
+      <div class="card-title">
+        <span>✅ With MuteFeed (Pure Signal)</span>
+        <span style="font-size: 12px; opacity: 0.8;">Zero Noise</span>
+      </div>
+      <div class="feed-items">
+        <div class="item">
+          <span class="item-title">Beating the compiler at signed 32-bit division</span>
+          <span class="tag tag-clean">Clean</span>
+        </div>
+        <div class="item">
+          <span class="item-title">Understanding PostgreSQL MVCC Architecture Internals</span>
+          <span class="tag tag-clean">Clean</span>
+        </div>
+        <div class="item">
+          <span class="item-title">Release 0.6.0: Typed functional compiler in Zig</span>
+          <span class="tag tag-clean">Clean</span>
+        </div>
+        <div class="item">
+          <span class="item-title">Reverse-engineering Apple Silicon neural engine ISA</span>
+          <span class="tag tag-clean">Clean</span>
+        </div>
+        <div class="item">
+          <span class="item-title">Sanitized URL: No tracking parameters or UTM garbage</span>
+          <span class="tag tag-clean">Sanitized</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <div class="readers-list">
+      <span>Works transparently with:</span>
+      <span class="reader-name">NetNewsWire</span>
+      <span>•</span>
+      <span class="reader-name">Reeder</span>
+      <span>•</span>
+      <span class="reader-name">Feedly</span>
+      <span>•</span>
+      <span class="reader-name">Inoreader</span>
+      <span>•</span>
+      <span class="reader-name">Miniflux</span>
+    </div>
+    <div class="stat-highlight">100% Free & Open Source (MIT)</div>
+  </div>
+
+</body>
+</html>
