@@ -474,10 +474,8 @@ go vet ./...
 
 ## ☕ Support the Author
 
-MuteFeed is a free, open-source labor of love. If it saves your time, filters the noise, and protects your attention, you can support its creator and ongoing development:
+MuteFeed is a free, privacy-first open-source project. If it saves your time, filters the noise, and protects your attention, you can support its creator anonymously:
 
-- ☕ **Buy Me a Coffee**: [buymeacoffee.com/enlivee](https://buymeacoffee.com/enlivee) (Cards, Apple Pay, Google Pay)
-- 💳 **Boosty**: [boosty.to/enlivee](https://boosty.to/enlivee) (Russian & international cards, СБП)
 - 💎 **USDT / TON (The Open Network)**: `UQB7QlryTUSPKqlOaaolXI7iqn5PDAvXOWVKdGeEkHR7Ps-3` (via Telegram @CryptoBot or Tonkeeper)
 - ⭐ **Star on GitHub**: Give a star to [enlivee/mutefeed](https://github.com/enlivee/mutefeed) — it's free and greatly helps discoverability!
 

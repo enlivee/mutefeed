@@ -154,12 +154,10 @@ docker run -d -p 8899:8899 ghcr.io/enlivee/mutefeed:latest
 
 ## ☕ Поддержать автора
 
-MuteFeed — полностью бесплатный проект с открытым исходным кодом. Если он бережёт ваше внимание, фильтрует мусор и экономит время, вы можете поддержать его развитие:
+MuteFeed — полностью бесплатный проект с открытым исходным кодом. Если он бережёт ваше внимание, фильтрует мусор и экономит время, вы можете поддержать автора напрямую и 100% анонимно:
 
-- ☕ **Buy Me a Coffee**: [buymeacoffee.com/enlivee](https://buymeacoffee.com/enlivee) (Зарубежные карты, Apple Pay, Google Pay)
-- 💳 **Boosty / СБП**: [boosty.to/enlivee](https://boosty.to/enlivee) (Карты любых российских банков)
 - 💎 **USDT / TON (The Open Network)**: `UQB7QlryTUSPKqlOaaolXI7iqn5PDAvXOWVKdGeEkHR7Ps-3` (через Telegram @CryptoBot или Tonkeeper)
-- ⭐ **Звезда на GitHub**: поставьте звездочку репозиторию [enlivee/mutefeed](https://github.com/enlivee/mutefeed) — это бесплатно и сильно помогает проекту!
+- ⭐ **Звезда на GitHub**: поставьте звёздочку репозиторию [enlivee/mutefeed](https://github.com/enlivee/mutefeed) — это бесплатно и сильно помогает проекту!
 
 ---
 

@@ -54,14 +54,11 @@ export interface Translations {
   manualReaderHint: string;
   donateModalTitle: string;
   donateModalDesc: string;
-  donateBmac: string;
-  donateBmacHint: string;
-  donateBoosty: string;
-  donateBoostyHint: string;
   donateCrypto: string;
   donateCryptoHint: string;
   donateStar: string;
   donateStarHint: string;
+  donatePills: string[];
   curatedDirectoryLabel: string;
   techDigestTitle: string;
   techDigestSources: string;
@@ -120,15 +117,12 @@ export const translations: Record<Language, Translations> = {
     inoreaderHint: 'Open and subscribe in Inoreader',
     manualReaderHint: 'For Miniflux, FreshRSS, Thunderbird, or any other reader, copy the clean URL below:',
     donateModalTitle: 'Support the Creator',
-    donateModalDesc: 'MuteFeed is a free, open-source passion project. If it saves your attention from noise and clickbait, you can support further development:',
-    donateBmac: 'Buy Me a Coffee',
-    donateBmacHint: 'Global cards, Apple Pay & Google Pay',
-    donateBoosty: 'Boosty / СБП / Cards',
-    donateBoostyHint: 'Convenient for Russian & international cards',
-    donateCrypto: 'USDT / TON (Telegram @CryptoBot & Tonkeeper)',
-    donateCryptoHint: 'Zero-fee direct transfer on The Open Network (TON)',
+    donateModalDesc: 'MuteFeed is a free, privacy-first open-source project. You can support the solo author directly and 100% anonymously via USDT or TON:',
+    donateCrypto: 'USDT / TON (The Open Network)',
+    donateCryptoHint: 'Zero fees, instant transfer via Telegram @CryptoBot or Tonkeeper',
     donateStar: 'Star on GitHub',
     donateStarHint: 'Free and greatly helps discoverability',
+    donatePills: ['🛡️ 100% Anonymous', '⚡ Instant Transfer', '💸 Zero Fees'],
     curatedDirectoryLabel: 'Curated Slop-Free Directory:',
     techDigestTitle: 'Clean Tech Digest',
     techDigestSources: '5 Top Sources Aggregated',
@@ -212,15 +206,12 @@ export const translations: Record<Language, Translations> = {
     inoreaderHint: 'Открыть и добавить ленту в аккаунт Inoreader',
     manualReaderHint: 'Для Miniflux, FreshRSS, Thunderbird и других ридеров скопируйте чистый URL ниже:',
     donateModalTitle: 'Поддержать автора проекта',
-    donateModalDesc: 'MuteFeed — бесплатный проект с открытым исходным кодом. Если сервис бережёт ваше внимание и время от кликбейта и слопа — поддержите его автора:',
-    donateBmac: 'Buy Me a Coffee',
-    donateBmacHint: 'Зарубежные карты, Apple Pay & Google Pay',
-    donateBoosty: 'Boosty / СБП / Карты РФ',
-    donateBoostyHint: 'Удобно для карт любых российских банков',
-    donateCrypto: 'USDT / TON (Telegram @CryptoBot и Tonkeeper)',
-    donateCryptoHint: 'Прямой перевод без комиссии в сети The Open Network (TON)',
+    donateModalDesc: 'MuteFeed — бесплатный проект с открытым исходным кодом. Вы можете поддержать автора напрямую и 100% анонимно через USDT или TON:',
+    donateCrypto: 'USDT / TON (Сеть The Open Network)',
+    donateCryptoHint: 'Без комиссии через Telegram @CryptoBot или Tonkeeper',
     donateStar: 'Поставить звезду на GitHub',
     donateStarHint: 'Бесплатно и очень помогает продвижению проекта',
+    donatePills: ['🛡️ 100% Анонимно', '⚡ Мгновенно', '💸 Без комиссий'],
     curatedDirectoryLabel: 'Проверенные ленты без спама:',
     techDigestTitle: 'Чистый IT-дайджест',
     techDigestSources: '5 топовых источников объединены',
@@ -304,15 +295,12 @@ export const translations: Record<Language, Translations> = {
     inoreaderHint: '打开并添加到 Inoreader 账号',
     manualReaderHint: '对于 Miniflux、FreshRSS、Thunderbird 等其他阅读器，请直接复制下方链接：',
     donateModalTitle: '支持项目作者',
-    donateModalDesc: 'MuteFeed 是一个自由开源的项目。如果它帮您过滤了噪音并节省了宝贵的时间，欢迎支持持续开发：',
-    donateBmac: 'Buy Me a Coffee',
-    donateBmacHint: '国际信用卡、Apple Pay 与 Google Pay',
-    donateBoosty: 'Boosty / 银联 / 银行卡',
-    donateBoostyHint: '支持多种支付方式',
-    donateCrypto: 'USDT / TON (Telegram @CryptoBot 与 Tonkeeper)',
-    donateCryptoHint: 'TON 网络零手续费直转',
+    donateModalDesc: 'MuteFeed 是一个自由开源的项目。您可以通过 USDT 或 TON 直接且 100% 匿名地支持作者：',
+    donateCrypto: 'USDT / TON (The Open Network 网络)',
+    donateCryptoHint: '通过 Telegram @CryptoBot 或 Tonkeeper 免手续费直转',
     donateStar: '在 GitHub 上点亮 Star',
     donateStarHint: '免费且能极大帮助项目被更多人看见',
+    donatePills: ['🛡️ 100% 匿名', '⚡ 实时到账', '💸 零手续费'],
     curatedDirectoryLabel: '精选无水文订阅源：',
     techDigestTitle: '纯净科技简报',
     techDigestSources: '汇聚 5 大精选信源',

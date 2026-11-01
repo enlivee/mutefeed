@@ -812,62 +812,15 @@ export default function App() {
             </div>
             <p className="modal-desc">{t.donateModalDesc}</p>
 
-            <div className="reader-options-list">
-              {/* Buy Me a Coffee */}
-              <a
-                className="reader-option-row"
-                href="https://buymeacoffee.com/enlivee"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="reader-option-content">
-                  <div className="reader-option-title">
-                    <span>☕</span> {t.donateBmac}
-                  </div>
-                  <div className="reader-option-desc">{t.donateBmacHint}</div>
-                </div>
-                <span className="reader-option-tag">Donate ↗</span>
-              </a>
-
-              {/* Boosty */}
-              <a
-                className="reader-option-row"
-                href="https://boosty.to/enlivee"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="reader-option-content">
-                  <div className="reader-option-title">
-                    <span>💳</span> {t.donateBoosty}
-                  </div>
-                  <div className="reader-option-desc">{t.donateBoostyHint}</div>
-                </div>
-                <span className="reader-option-tag">Support ↗</span>
-              </a>
-
-              {/* Star on GitHub */}
-              <a
-                className="reader-option-row"
-                href="https://github.com/enlivee/mutefeed"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="reader-option-content">
-                  <div className="reader-option-title">
-                    <span>⭐</span> {t.donateStar}
-                  </div>
-                  <div className="reader-option-desc">{t.donateStarHint}</div>
-                </div>
-                <span className="reader-option-tag">Star ⭐</span>
-              </a>
-            </div>
-
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
-                {t.donateCrypto} — {t.donateCryptoHint}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>
+                💎 {t.donateCrypto}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>
+                {t.donateCryptoHint}
               </div>
               <div className="code-box">
-                <code title="USDT / TON Address: UQB7QlryTUSPKqlOaaolXI7iqn5PDAvXOWVKdGeEkHR7Ps-3">
+                <code title="USDT / TON: UQB7QlryTUSPKqlOaaolXI7iqn5PDAvXOWVKdGeEkHR7Ps-3">
                   UQB7QlryTUSPKqlOaaolXI7iqn5PDAvXOWVKdGeEkHR7Ps-3
                 </code>
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -892,6 +845,32 @@ export default function App() {
                   </a>
                 </div>
               </div>
+            </div>
+
+            <div className="chips-row" style={{ marginBottom: 20 }}>
+              {t.donatePills.map((pill) => (
+                <span key={pill} className="bundle-source-pill" style={{ color: 'var(--text-muted)' }}>
+                  {pill}
+                </span>
+              ))}
+            </div>
+
+            <div className="reader-options-list">
+              {/* Star on GitHub */}
+              <a
+                className="reader-option-row"
+                href="https://github.com/enlivee/mutefeed"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="reader-option-content">
+                  <div className="reader-option-title">
+                    <span>⭐</span> {t.donateStar}
+                  </div>
+                  <div className="reader-option-desc">{t.donateStarHint}</div>
+                </div>
+                <span className="reader-option-tag">Star ⭐</span>
+              </a>
             </div>
           </div>
         </div>
