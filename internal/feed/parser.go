@@ -20,16 +20,21 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
+// MaxFeedSizeBytes defines the maximum allowed size (10MB) for upstream feed responses.
+const MaxFeedSizeBytes = 10 * 1024 * 1024 // 10MB
+
 // ErrSSRFBlocked is returned when a request targets a private or internal IP address.
 var ErrSSRFBlocked = errors.New("request to private or internal IP address is blocked")
 
 var (
-	awsMetadataIP  = net.ParseIP("169.254.169.254")
-	_, cgnatNet, _ = net.ParseCIDR("100.64.0.0/10")
+	awsMetadataIP     = net.ParseIP("169.254.169.254")
+	alibabaMetadataIP = net.ParseIP("100.100.100.200")
+	_, cgnatNet, _    = net.ParseCIDR("100.64.0.0/10")
+	_, benchNet, _    = net.ParseCIDR("198.18.0.0/15")
 )
 
 // IsBlockedIP returns true if ip is private, loopback, link-local, multicast,
-// unspecified (0.0.0.0 / ::), cloud metadata (169.254.169.254), or CGNAT.
+// unspecified (0.0.0.0 / ::), cloud metadata (169.254.169.254, 100.100.100.200), benchmark, or CGNAT.
 func IsBlockedIP(ip net.IP) bool {
 	if ip == nil {
 		return true
@@ -49,11 +54,15 @@ func IsBlockedIP(ip net.IP) bool {
 		return true
 	}
 
-	if ip.Equal(awsMetadataIP) {
+	if ip.Equal(awsMetadataIP) || ip.Equal(alibabaMetadataIP) {
 		return true
 	}
 
 	if cgnatNet != nil && cgnatNet.Contains(ip) {
+		return true
+	}
+
+	if benchNet != nil && benchNet.Contains(ip) {
 		return true
 	}
 
@@ -71,6 +80,9 @@ func SafeDialContext(dialer *net.Dialer) func(ctx context.Context, network, addr
 
 		var ips []net.IP
 		if ip := net.ParseIP(host); ip != nil {
+			ips = []net.IP{ip}
+		} else if n, parseErr := strconv.ParseUint(host, 0, 32); parseErr == nil {
+			ip := net.IPv4(byte(n>>24), byte(n>>16), byte(n>>8), byte(n))
 			ips = []net.IP{ip}
 		} else {
 			ips, err = net.DefaultResolver.LookupIP(ctx, "ip", host)
@@ -124,7 +136,7 @@ func NewSafeTransport() *http.Transport {
 
 func newDefaultClient() *http.Client {
 	return &http.Client{
-		Timeout:   12 * time.Second,
+		Timeout:   10 * time.Second,
 		Transport: NewSafeTransport(),
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= 10 {
@@ -235,8 +247,8 @@ func ValidateURL(rawURL string) error {
 		return nil
 	}
 
-	// 2. Integer/decimal IPv4 literal check (e.g. 2130706433 -> 127.0.0.1)
-	if n, parseErr := strconv.ParseUint(hostname, 10, 32); parseErr == nil {
+	// 2. Integer/hex/decimal IPv4 literal check (e.g. 2130706433 or 0x7f000001 -> 127.0.0.1)
+	if n, parseErr := strconv.ParseUint(hostname, 0, 32); parseErr == nil {
 		ip := net.IPv4(byte(n>>24), byte(n>>16), byte(n>>8), byte(n))
 		if IsBlockedIP(ip) {
 			return ErrSSRFBlocked
@@ -489,6 +501,9 @@ func FetchFeedWithClient(ctx context.Context, client *http.Client, cache *FeedCa
 	if err == nil && parsedFeed != nil {
 		return parsedFeed, nil
 	}
+	if err != nil && (errors.Is(err, ErrSSRFBlocked) || strings.Contains(err.Error(), "exceeded maximum size limit")) {
+		return nil, err
+	}
 
 	// If failed and body is HTML, attempt auto-discovery from <link> tags
 	if isHTML || len(bodyBytes) > 0 {
@@ -589,9 +604,13 @@ func fetchAndParse(ctx context.Context, client *http.Client, cache *FeedCache, f
 
 	atomic.AddUint64(&cache.fullFetches, 1)
 
-	bodyBytes, err := io.ReadAll(resp.Body)
+	// Wrap response body with io.LimitReader to protect against unbounded or malicious giant feeds.
+	bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, MaxFeedSizeBytes+1))
 	if err != nil {
 		return nil, false, nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+	if len(bodyBytes) > MaxFeedSizeBytes {
+		return nil, false, nil, fmt.Errorf("feed response exceeded maximum size limit of %d bytes", MaxFeedSizeBytes)
 	}
 
 	fp := gofeed.NewParser()

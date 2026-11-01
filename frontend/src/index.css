@@ -45,7 +45,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  padding-bottom: 96px;
+  padding-bottom: 68px;
 }
 
 /* Custom Scrollbars */
@@ -86,28 +86,29 @@ button, input {
 .app-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 20px 24px;
 }
 
 /* Header Masthead */
+.app-header,
 .masthead {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 24px;
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .brand-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -119,7 +120,7 @@ button, input {
 
 .brand-title {
   font-family: var(--font-serif);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
@@ -207,6 +208,23 @@ button, input {
 }
 
 @media (max-width: 900px) {
+  .app-container {
+    padding: 12px 16px;
+  }
+  .app-header,
+  .masthead {
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .subscribe-bar,
+  .reader-dock {
+    padding: 8px 16px;
+  }
+  body {
+    padding-bottom: 76px;
+  }
   .console-grid {
     grid-template-columns: 1fr;
   }
@@ -675,6 +693,29 @@ button, input {
   color: var(--status-muted);
 }
 
+.mute-reason-banner {
+  margin: 4px 0 8px 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mute-reason-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: #F87171;
+  line-height: 1.3;
+}
+
 .article-meta {
   display: flex;
   align-items: center;
@@ -717,15 +758,16 @@ button, input {
 }
 
 /* Sticky Bottom Reader Dock */
+.subscribe-bar,
 .reader-dock {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(13, 15, 18, 0.92);
+  background: rgba(13, 15, 18, 0.94);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--border);
-  padding: 16px 24px;
+  padding: 8px 24px;
   z-index: 100;
 }
 
@@ -735,16 +777,16 @@ button, input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
 .dock-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   flex: 1;
-  min-width: 280px;
+  min-width: 260px;
 }
 
 .dock-title {
@@ -759,8 +801,8 @@ button, input {
 }
 
 .dock-url-box {
-  margin-top: 4px;
-  padding: 6px 12px;
+  margin-top: 2px;
+  padding: 4px 10px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -770,7 +812,7 @@ button, input {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 600px;
+  max-width: 540px;
 }
 
 .dock-actions {

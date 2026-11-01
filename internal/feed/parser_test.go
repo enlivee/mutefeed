@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -224,7 +225,11 @@ func TestSSRFProtection(t *testing.T) {
 		"http://[::1]:8080",
 		"http://[::ffff:127.0.0.1]",
 		"http://100.64.0.1",
-		"http://2130706433", // decimal 127.0.0.1
+		"http://100.100.100.200", // Alibaba metadata
+		"http://198.18.0.1",      // benchmark network
+		"http://2130706433",      // decimal 127.0.0.1
+		"http://0x7f000001",      // hex 127.0.0.1
+		"http://017700000001",    // octal 127.0.0.1
 		"ftp://news.ycombinator.com/rss",
 		"file:///etc/passwd",
 		"gopher://127.0.0.1:70",
@@ -294,6 +299,11 @@ func TestIsBlockedIP(t *testing.T) {
 		{"100.64.0.1", true},
 		{"100.127.255.255", true},
 
+		// Cloud metadata & Benchmark
+		{"100.100.100.200", true},
+		{"198.18.0.1", true},
+		{"198.19.255.254", true},
+
 		// Public IP addresses (should NOT be blocked)
 		{"93.184.216.34", false},
 		{"8.8.8.8", false},
@@ -310,6 +320,45 @@ func TestIsBlockedIP(t *testing.T) {
 		if got != tc.blocked {
 			t.Errorf("IsBlockedIP(%s) = %v, want %v", tc.ip, got, tc.blocked)
 		}
+	}
+}
+
+func TestDefaultClientTimeoutBounded(t *testing.T) {
+	c := DefaultHTTPClient()
+	if c.Timeout <= 0 || c.Timeout > 10*time.Second {
+		t.Fatalf("expected DefaultHTTPClient timeout to be bounded <= 10s, got %v", c.Timeout)
+	}
+}
+
+func TestFetchFeedBodyLimit(t *testing.T) {
+	// Create a mock server that returns content exceeding MaxFeedSizeBytes
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/rss+xml")
+		w.Write([]byte("<?xml version=\"1.0\"?><rss><channel><title>Big</title><!-- "))
+		chunk := make([]byte, 64*1024)
+		for i := range chunk {
+			chunk[i] = 'A'
+		}
+		totalWritten := 0
+		for totalWritten < MaxFeedSizeBytes+4096 {
+			n, _ := w.Write(chunk)
+			totalWritten += n
+		}
+		w.Write([]byte(" --></channel></rss>"))
+	}))
+	defer ts.Close()
+
+	cache := NewFeedCache(10)
+	client := ts.Client()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := FetchFeedWithClient(ctx, client, cache, ts.URL)
+	if err == nil {
+		t.Fatalf("expected error for feed exceeding MaxFeedSizeBytes, got nil")
+	}
+	if !strings.Contains(err.Error(), "maximum size limit") {
+		t.Fatalf("expected 'maximum size limit' error, got %v", err)
 	}
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Language, FeedItem, InspectResult, PresetInfo, TestResponse } from './types';
-import { translations } from './i18n';
+import { Language, FeedItem, Decision, InspectResult, PresetInfo, TestResponse } from './types';
+import { translations, Translations } from './i18n';
 
 const CURATED_FEEDS = [
   { name: 'Hacker News', url: 'https://news.ycombinator.com/rss' },
@@ -92,9 +92,79 @@ function getPublicationTag(item: FeedItem): string {
   return '';
 }
 
+function getProminentMuteReason(decision: Decision, t: Translations): string {
+  if (decision.kept) return '';
+  const presetLabel = t.presetBadges[decision.preset] || decision.preset || t.mutedBadge;
+
+  // 1. Paywalls
+  if (decision.preset === 'paywalls') {
+    if (decision.details) {
+      const domainMatch = decision.details.match(/matches\s+([^\s]+)/i);
+      if (domainMatch) {
+        return `${presetLabel} (${domainMatch[1]})`;
+      }
+      return `${presetLabel} (${decision.details})`;
+    }
+    return presetLabel;
+  }
+
+  // 2. Custom Mute Keywords
+  if (decision.preset === 'custom' || decision.reason?.toLowerCase().includes('custom')) {
+    const kwMatch = decision.details?.match(/matches custom mute keyword\s*"?([^"]+)"?/i)
+      || decision.reason?.match(/custom mute keyword:\s*([^\s]+)/i);
+    if (kwMatch) {
+      return `Custom: "${kwMatch[1]}"`;
+    }
+    return `Custom keyword`;
+  }
+
+  // 3. AI Slop
+  if (decision.preset === 'ai-slop') {
+    if (decision.details) {
+      const matchQuote = decision.details.match(/matches\s+"([^"]+)"/i);
+      if (matchQuote) {
+        const phrase = matchQuote[1].length > 24 ? matchQuote[1].slice(0, 22) + '...' : matchQuote[1];
+        return `${presetLabel}: "${phrase}"`;
+      }
+      const triggersMatch = decision.details.match(/triggers:\s*([^)]+)/i);
+      if (triggersMatch) {
+        const triggers = triggersMatch[1].length > 28 ? triggersMatch[1].slice(0, 26) + '...' : triggersMatch[1];
+        return `${presetLabel}: ${triggers}`;
+      }
+    }
+    return presetLabel;
+  }
+
+  // 4. Clickbait
+  if (decision.preset === 'clickbait') {
+    if (decision.details) {
+      const matchQuote = decision.details.match(/matches\s+"([^"]+)"/i);
+      if (matchQuote) {
+        return `${presetLabel}: "${matchQuote[1]}"`;
+      }
+    }
+    return presetLabel;
+  }
+
+  // 5. Duplicate
+  if (decision.preset === 'duplicate') {
+    return t.presetBadges['duplicate'] || 'Duplicate';
+  }
+
+  // 6. Sponsored / Crypto / Other
+  if (decision.details) {
+    const matchQuote = decision.details.match(/matches\s+"?([^"]+)"?/i);
+    if (matchQuote && matchQuote[1].length <= 25) {
+      return `${presetLabel} (${matchQuote[1]})`;
+    }
+  }
+
+  return presetLabel;
+}
+
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
-  const [mode, setMode] = useState<'single' | 'bundle'>('single');
+  const [mode, setMode] = useState<'single' | 'bundle'>('bundle');
   const [bundleId, setBundleId] = useState<string>('tech');
   const [feedUrl, setFeedUrl] = useState('https://news.ycombinator.com/rss');
   const [presets, setPresets] = useState<PresetInfo[]>(DEFAULT_PRESETS);
@@ -219,7 +289,7 @@ export default function App() {
 
   // Initial fetch on mount
   useEffect(() => {
-    inspectData('single', feedUrl);
+    inspectData('bundle', undefined, 'tech');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -285,7 +355,7 @@ export default function App() {
   return (
     <div className="app-container">
       {/* Header Masthead */}
-      <header className="masthead">
+      <header className="app-header masthead">
         <div className="brand">
           <div className="brand-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -310,8 +380,7 @@ export default function App() {
 
           <button className="tool-btn" onClick={() => setBadgeModalOpen(true)}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
             {t.badgeBtn}
           </button>
@@ -358,6 +427,35 @@ export default function App() {
               >
                 {t.digestMode}
               </button>
+            </div>
+          </div>
+
+          {/* Filter Presets Panel */}
+          <div className="panel-card">
+            <h2 className="card-title">{t.presetsTitle}</h2>
+            <div className="toggles-list">
+              {presets.map((preset) => {
+                const info = t.presetsInfo[preset.id];
+                const displayName = info?.name || preset.name;
+                const displayDesc = info?.description || preset.description;
+                return (
+                  <div
+                    key={preset.id}
+                    className="toggle-row"
+                    onClick={() => handleTogglePreset(preset.id)}
+                  >
+                    <div className="toggle-info">
+                      <div className="toggle-title-row">
+                        <span className="toggle-name">{displayName}</span>
+                      </div>
+                      <span className="toggle-desc">{displayDesc}</span>
+                    </div>
+                    <div className={`switch ${preset.enabled ? 'checked' : ''}`}>
+                      <div className="switch-thumb"></div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -427,35 +525,6 @@ export default function App() {
                 </button>
               </div>
             )}
-          </div>
-
-          {/* Filter Presets Panel */}
-          <div className="panel-card">
-            <h2 className="card-title">{t.presetsTitle}</h2>
-            <div className="toggles-list">
-              {presets.map((preset) => {
-                const info = t.presetsInfo[preset.id];
-                const displayName = info?.name || preset.name;
-                const displayDesc = info?.description || preset.description;
-                return (
-                  <div
-                    key={preset.id}
-                    className="toggle-row"
-                    onClick={() => handleTogglePreset(preset.id)}
-                  >
-                    <div className="toggle-info">
-                      <div className="toggle-title-row">
-                        <span className="toggle-name">{displayName}</span>
-                      </div>
-                      <span className="toggle-desc">{displayDesc}</span>
-                    </div>
-                    <div className={`switch ${preset.enabled ? 'checked' : ''}`}>
-                      <div className="switch-thumb"></div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
 
           {/* Custom Mute Keywords */}
@@ -564,6 +633,18 @@ export default function App() {
                       </span>
                     </div>
 
+                    {!res.decision.kept && (
+                      <div className="mute-reason-banner">
+                        <span className="mute-reason-badge">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                          </svg>
+                          <span>{getProminentMuteReason(res.decision, t)}</span>
+                        </span>
+                      </div>
+                    )}
+
                     <div className="article-meta">
                       {domain && <span>{domain}</span>}
                       {res.item.published && <span>{new Date(res.item.published).toLocaleDateString()}</span>}
@@ -600,7 +681,7 @@ export default function App() {
       </main>
 
       {/* Sticky Bottom Reader Dock */}
-      <footer className="reader-dock">
+      <footer className="subscribe-bar reader-dock">
         <div className="dock-inner">
           <div className="dock-info">
             <div className="dock-title">{t.dockTitle}</div>
@@ -812,6 +893,25 @@ export default function App() {
             </div>
             <p className="modal-desc">{t.donateModalDesc}</p>
 
+            {/* Friendly free option: Star on GitHub */}
+            <div className="reader-options-list" style={{ marginBottom: 20 }}>
+              <a
+                className="reader-option-row"
+                href="https://github.com/enlivee/mutefeed"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="reader-option-content">
+                  <div className="reader-option-title">
+                    <span>⭐</span> {t.donateStar}
+                  </div>
+                  <div className="reader-option-desc">{t.donateStarHint}</div>
+                </div>
+                <span className="reader-option-tag">Star ⭐</span>
+              </a>
+            </div>
+
+            {/* Crypto Donation Option */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>
                 💎 {t.donateCrypto}
@@ -832,7 +932,7 @@ export default function App() {
                       setTimeout(() => setCryptoCopied(false), 2000);
                     }}
                   >
-                    {cryptoCopied ? t.copied : t.copyUrl}
+                    {cryptoCopied ? t.copied : t.copyAddress}
                   </button>
                   <a
                     className="tool-btn"
@@ -847,30 +947,12 @@ export default function App() {
               </div>
             </div>
 
-            <div className="chips-row" style={{ marginBottom: 20 }}>
+            <div className="chips-row">
               {t.donatePills.map((pill) => (
                 <span key={pill} className="bundle-source-pill" style={{ color: 'var(--text-muted)' }}>
                   {pill}
                 </span>
               ))}
-            </div>
-
-            <div className="reader-options-list">
-              {/* Star on GitHub */}
-              <a
-                className="reader-option-row"
-                href="https://github.com/enlivee/mutefeed"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="reader-option-content">
-                  <div className="reader-option-title">
-                    <span>⭐</span> {t.donateStar}
-                  </div>
-                  <div className="reader-option-desc">{t.donateStarHint}</div>
-                </div>
-                <span className="reader-option-tag">Star ⭐</span>
-              </a>
             </div>
           </div>
         </div>

@@ -32,6 +32,7 @@ export interface Translations {
   dockTitle: string;
   dockHint: string;
   copyUrl: string;
+  copyAddress: string;
   copied: string;
   openApp: string;
   viewXml: string;
@@ -96,6 +97,7 @@ export const translations: Record<Language, Translations> = {
     dockTitle: 'Subscribe in your RSS Reader:',
     dockHint: 'Paste this link into NetNewsWire, Feedly, or Reeder',
     copyUrl: 'Copy URL',
+    copyAddress: 'Copy address',
     copied: 'Copied!',
     openApp: 'Open in App',
     viewXml: 'View XML',
@@ -156,6 +158,8 @@ export const translations: Record<Language, Translations> = {
       'clickbait': 'Clickbait',
       'sponsored': 'Sponsored',
       'crypto-hype': 'Crypto',
+      'custom': 'Custom',
+      'duplicate': 'Duplicate',
     },
   },
   ru: {
@@ -185,6 +189,7 @@ export const translations: Record<Language, Translations> = {
     dockTitle: 'Ссылка для вашего RSS-ридера:',
     dockHint: 'Вставьте этот URL в NetNewsWire, Feedly или Reeder',
     copyUrl: 'Копировать URL',
+    copyAddress: 'Скопировать адрес',
     copied: 'Скопировано!',
     openApp: 'Открыть в приложении',
     viewXml: 'Открыть XML',
@@ -245,6 +250,8 @@ export const translations: Record<Language, Translations> = {
       'clickbait': 'Кликбейт',
       'sponsored': 'Реклама',
       'crypto-hype': 'Крипта',
+      'custom': 'Свой фильтр',
+      'duplicate': 'Дубликат',
     },
   },
   zh: {
@@ -274,6 +281,7 @@ export const translations: Record<Language, Translations> = {
     dockTitle: '订阅到您的 RSS 阅读器：',
     dockHint: '将此链接添加到 NetNewsWire、Feedly 或 Reeder 中',
     copyUrl: '复制地址',
+    copyAddress: '复制地址',
     copied: '已复制!',
     openApp: '在应用中打开',
     viewXml: '查看 XML',
@@ -334,6 +342,8 @@ export const translations: Record<Language, Translations> = {
       'clickbait': '标题党',
       'sponsored': '推广',
       'crypto-hype': '炒作',
+      'custom': '自定义',
+      'duplicate': '重复文章',
     },
   },
 };

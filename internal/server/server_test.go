@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/enlivee/mutefeed/internal/config"
 	"github.com/enlivee/mutefeed/internal/feed"
@@ -613,5 +614,44 @@ func TestBundleEndpoints(t *testing.T) {
 	feedXML := wFeed.Body.String()
 	if !strings.Contains(feedXML, "[Mock Feed]") {
 		t.Errorf("expected [Mock Feed] tag in RSS title, got:\n%s", feedXML)
+	}
+}
+
+func TestServerCacheTTL(t *testing.T) {
+	srv := NewServer(config.DefaultConfig())
+	if srv.CacheTTL() != 15*time.Minute {
+		t.Fatalf("expected cacheTTL to be 15m, got %v", srv.CacheTTL())
+	}
+}
+
+func TestServerSSRFBlockedEndpoint(t *testing.T) {
+	// Restore default safe client with SSRF enforcement
+	feed.ResetHTTPClient()
+	feed.SetAllowPrivateIPs(false)
+	defer feed.ResetHTTPClient()
+
+	srv := NewServer(config.DefaultConfig())
+	srv.limiter.SetEnabled(false)
+	handler := srv.Routes()
+
+	// 1. /feed endpoint targeting loopback IP
+	reqFeed := httptest.NewRequest("GET", "/feed?url=http://127.0.0.1:8899", nil)
+	wFeed := httptest.NewRecorder()
+	handler.ServeHTTP(wFeed, reqFeed)
+
+	if wFeed.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 Forbidden for SSRF target on /feed, got %d: %s", wFeed.Code, wFeed.Body.String())
+	}
+	if !strings.Contains(wFeed.Body.String(), "forbidden") {
+		t.Errorf("expected forbidden message, got %s", wFeed.Body.String())
+	}
+
+	// 2. /api/test endpoint targeting AWS metadata
+	reqTest := httptest.NewRequest("GET", "/api/test?url=http://169.254.169.254/latest/meta-data/", nil)
+	wTest := httptest.NewRecorder()
+	handler.ServeHTTP(wTest, reqTest)
+
+	if wTest.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 Forbidden for SSRF target on /api/test, got %d: %s", wTest.Code, wTest.Body.String())
 	}
 }

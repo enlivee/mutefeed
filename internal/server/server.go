@@ -47,7 +47,7 @@ func NewServer(cfg *config.Config) *Server {
 		version:   "1.0.0",
 		startTime: time.Now(),
 		cache:     make(map[string]cachedFeed),
-		cacheTTL:  5 * time.Minute,
+		cacheTTL:  15 * time.Minute,
 		limiter:   NewIPRateLimiter(60, 10), // 60 requests/minute, burst 10
 		metrics:   NewMetrics(feed.DefaultFeedCache()),
 	}
@@ -81,6 +81,11 @@ func (s *Server) Metrics() *Metrics {
 // Worker returns the background cache warmup worker
 func (s *Server) Worker() *Worker {
 	return s.worker
+}
+
+// CacheTTL returns the configured in-memory cache time-to-live duration.
+func (s *Server) CacheTTL() time.Duration {
+	return s.cacheTTL
 }
 
 // SetCachedFeed stores content into server cache safely
@@ -205,6 +210,10 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 		}
 		parsedFeed, err = feed.FetchBundle(ctx, bundle, customURLs)
 		if err != nil {
+			if errors.Is(err, feed.ErrSSRFBlocked) {
+				http.Error(w, "Access to private or internal addresses is forbidden", http.StatusForbidden)
+				return
+			}
 			if errors.Is(err, feed.ErrBundleNotFound) {
 				http.Error(w, fmt.Sprintf("Bundle %q not found", bundle), http.StatusBadRequest)
 			} else {
@@ -215,6 +224,10 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 	} else {
 		parsedFeed, err = feed.FetchFeed(ctx, feedURL)
 		if err != nil {
+			if errors.Is(err, feed.ErrSSRFBlocked) {
+				http.Error(w, "Access to private or internal addresses is forbidden", http.StatusForbidden)
+				return
+			}
 			http.Error(w, fmt.Sprintf("Failed to fetch upstream feed: %v", err), http.StatusBadGateway)
 			return
 		}
@@ -303,6 +316,10 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
 		}
 		parsedFeed, err = feed.FetchBundle(ctx, bundle, customURLs)
 		if err != nil {
+			if errors.Is(err, feed.ErrSSRFBlocked) {
+				s.jsonError(w, "Access to private or internal addresses is forbidden", http.StatusForbidden)
+				return
+			}
 			if errors.Is(err, feed.ErrBundleNotFound) {
 				s.jsonError(w, fmt.Sprintf("Bundle %q not found", bundle), http.StatusBadRequest)
 			} else {
@@ -313,6 +330,10 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
 	} else {
 		parsedFeed, err = feed.FetchFeed(ctx, feedURL)
 		if err != nil {
+			if errors.Is(err, feed.ErrSSRFBlocked) {
+				s.jsonError(w, "Access to private or internal addresses is forbidden", http.StatusForbidden)
+				return
+			}
 			s.jsonError(w, fmt.Sprintf("Upstream feed error: %v", err), http.StatusBadGateway)
 			return
 		}
@@ -482,6 +503,11 @@ func (s *Server) handleBadge(w http.ResponseWriter, r *http.Request) {
 		parsedFeed, err = feed.FetchFeed(ctx, feedURL)
 	}
 	if err != nil {
+		if errors.Is(err, feed.ErrSSRFBlocked) {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte(GenerateErrorBadge()))
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(GenerateErrorBadge()))
 		return
