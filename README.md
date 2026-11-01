@@ -478,7 +478,7 @@ MuteFeed is a free, open-source labor of love. If it saves your time, filters th
 
 - ☕ **Buy Me a Coffee**: [buymeacoffee.com/enlivee](https://buymeacoffee.com/enlivee) (Cards, Apple Pay, Google Pay)
 - 💳 **Boosty**: [boosty.to/enlivee](https://boosty.to/enlivee) (Russian & international cards, СБП)
-- 💎 **USDT / Crypto (TRC20)**: `TYDny3Vb2N1s3v9kC7gRzX4YJ8LwMqeF2A`
+- 💎 **USDT / TON (The Open Network)**: `UQB7QlryTUSPKqlOaaolXI7iqn5PDAvXOWVKdGeEkHR7Ps-3` (via Telegram @CryptoBot or Tonkeeper)
 - ⭐ **Star on GitHub**: Give a star to [enlivee/mutefeed](https://github.com/enlivee/mutefeed) — it's free and greatly helps discoverability!
 
 ---

@@ -158,7 +158,7 @@ MuteFeed — полностью бесплатный проект с откры�
 
 - ☕ **Buy Me a Coffee**: [buymeacoffee.com/enlivee](https://buymeacoffee.com/enlivee) (Зарубежные карты, Apple Pay, Google Pay)
 - 💳 **Boosty / СБП**: [boosty.to/enlivee](https://boosty.to/enlivee) (Карты любых российских банков)
-- 💎 **USDT (TRC20)**: `TYDny3Vb2N1s3v9kC7gRzX4YJ8LwMqeF2A`
+- 💎 **USDT / TON (The Open Network)**: `UQB7QlryTUSPKqlOaaolXI7iqn5PDAvXOWVKdGeEkHR7Ps-3` (через Telegram @CryptoBot или Tonkeeper)
 - ⭐ **Звезда на GitHub**: поставьте звездочку репозиторию [enlivee/mutefeed](https://github.com/enlivee/mutefeed) — это бесплатно и сильно помогает проекту!
 
 ---

@@ -867,17 +867,30 @@ export default function App() {
                 {t.donateCrypto} — {t.donateCryptoHint}
               </div>
               <div className="code-box">
-                <code>TYDny3Vb2N1s3v9kC7gRzX4YJ8LwMqeF2A</code>
-                <button
-                  className="tool-btn"
-                  onClick={() => {
-                    navigator.clipboard.writeText('TYDny3Vb2N1s3v9kC7gRzX4YJ8LwMqeF2A');
-                    setCryptoCopied(true);
-                    setTimeout(() => setCryptoCopied(false), 2000);
-                  }}
-                >
-                  {cryptoCopied ? t.copied : t.copyUrl}
-                </button>
+                <code title="USDT / TON Address: UQB7QlryTUSPKqlOaaolXI7iqn5PDAvXOWVKdGeEkHR7Ps-3">
+                  UQB7QlryTUSPKqlOaaolXI7iqn5PDAvXOWVKdGeEkHR7Ps-3
+                </code>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  <button
+                    className="tool-btn"
+                    onClick={() => {
+                      navigator.clipboard.writeText('UQB7QlryTUSPKqlOaaolXI7iqn5PDAvXOWVKdGeEkHR7Ps-3');
+                      setCryptoCopied(true);
+                      setTimeout(() => setCryptoCopied(false), 2000);
+                    }}
+                  >
+                    {cryptoCopied ? t.copied : t.copyUrl}
+                  </button>
+                  <a
+                    className="tool-btn"
+                    href="https://t.me/CryptoBot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    @CryptoBot ↗
+                  </a>
+                </div>
               </div>
             </div>
           </div>
