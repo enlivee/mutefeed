@@ -162,6 +162,62 @@ function getProminentMuteReason(decision: Decision, t: Translations): string {
   return presetLabel;
 }
 
+const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_RU = ['янв.', 'февр.', 'мар.', 'апр.', 'мая', 'июн.', 'июл.', 'авг.', 'сент.', 'окт.', 'нояб.', 'дек.'];
+
+export interface FormattedDate {
+  text: string;
+  full: string;
+}
+
+export function formatArticleDate(publishedStr: string | undefined, lang: Language): FormattedDate | null {
+  if (!publishedStr) return null;
+  const date = new Date(publishedStr);
+  if (isNaN(date.getTime())) return null;
+
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const timeStr = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  const full = `${date.toLocaleString()} (UTC: ${date.toISOString()})`;
+
+  // Published within the last 24 hours (with tolerance for small future clock skew up to 5 min)
+  if (diffMs < 24 * 60 * 60 * 1000 && diffMs >= -300000) {
+    if (diffMs < 60 * 1000) {
+      if (lang === 'ru') return { text: `только что, ${timeStr}`, full };
+      if (lang === 'zh') return { text: `刚刚, ${timeStr}`, full };
+      return { text: `just now, ${timeStr}`, full };
+    }
+
+    if (diffMs < 60 * 60 * 1000) {
+      const mins = Math.floor(diffMs / (60 * 1000));
+      if (lang === 'ru') return { text: `${mins} мин назад, ${timeStr}`, full };
+      if (lang === 'zh') return { text: `${mins}分钟前, ${timeStr}`, full };
+      return { text: `${mins}m ago, ${timeStr}`, full };
+    }
+
+    const hrs = Math.floor(diffMs / (60 * 60 * 1000));
+    if (lang === 'ru') return { text: `${hrs} ч назад, ${timeStr}`, full };
+    if (lang === 'zh') return { text: `${hrs}小时前, ${timeStr}`, full };
+    return { text: `${hrs}h ago, ${timeStr}`, full };
+  }
+
+  // Older than 24 hours (or published far into the future)
+  const isDiffYear = date.getFullYear() !== new Date().getFullYear();
+  if (lang === 'zh') {
+    const yearPrefix = isDiffYear ? `${date.getFullYear()}年` : '';
+    return { text: `${yearPrefix}${date.getMonth() + 1}月${date.getDate()}日 ${timeStr}`, full };
+  }
+
+  if (lang === 'ru') {
+    const yearSuffix = isDiffYear ? ` ${date.getFullYear()} г.` : '';
+    return { text: `${pad(date.getDate())} ${MONTHS_RU[date.getMonth()]}${yearSuffix}, ${timeStr}`, full };
+  }
+
+  const yearSuffix = isDiffYear ? ` ${date.getFullYear()}` : '';
+  return { text: `${pad(date.getDate())} ${MONTHS_EN[date.getMonth()]}${yearSuffix}, ${timeStr}`, full };
+}
+
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
   const [mode, setMode] = useState<'single' | 'bundle'>('bundle');
@@ -602,13 +658,21 @@ export default function App() {
           {!loading && filteredItems.length > 0 && (
             <div className="articles-list">
               {filteredItems.map((res: InspectResult, idx: number) => {
-                const domain = res.item.link ? new URL(res.item.link).hostname.replace('www.', '') : '';
+                let domain = '';
+                if (res.item.link) {
+                  try {
+                    domain = new URL(res.item.link).hostname.replace(/^www\./, '');
+                  } catch {
+                    domain = '';
+                  }
+                }
                 const isExpanded = !!expandedIndices[idx];
                 const publication = getPublicationTag(res.item);
                 const escapedPub = publication.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                 const displayTitle = publication
                   ? (res.item.title || '(Untitled)').replace(new RegExp(`^\\s*\\[${escapedPub}\\]\\s*`, 'i'), '')
                   : (res.item.title || '(Untitled)');
+                const formattedDate = formatArticleDate(res.item.publishedParsed || res.item.published, lang);
 
                 return (
                   <div key={idx} className={`article-card ${!res.decision.kept ? 'muted' : ''}`}>
@@ -655,7 +719,11 @@ export default function App() {
 
                     <div className="article-meta">
                       {domain && <span>{domain}</span>}
-                      {res.item.published && <span>{new Date(res.item.published).toLocaleDateString()}</span>}
+                      {formattedDate && (
+                        <span title={formattedDate.full}>
+                          {formattedDate.text}
+                        </span>
+                      )}
                       {!res.decision.kept && (
                         <button
                           style={{ color: 'var(--accent)', cursor: 'pointer', fontSize: 12 }}

@@ -5,6 +5,7 @@ export interface FeedItem {
   link: string;
   description: string;
   published: string;
+  publishedParsed?: string;
   author: string;
   guid?: string;
   categories?: string[];
