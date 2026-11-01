@@ -30,6 +30,18 @@
 **👉 [mutefeed.onrender.com](https://mutefeed.onrender.com)**  
 *Paste any RSS feed, toggle what you want muted, and get a clean stream for NetNewsWire, Feedly, or Reeder in 5 seconds. 100% free, no registration, no deployment required.*
 
+### ⚡ Quick Start (Self-Hosted in 1 Command)
+```bash
+# Option 1: macOS via Homebrew
+brew install enlivee/tap/mutefeed && mutefeed serve
+
+# Option 2: Curl One-Liner (macOS & Linux)
+curl -fsSL https://raw.githubusercontent.com/enlivee/mutefeed/main/install.sh | bash
+
+# Option 3: Docker (Runs locally on localhost:8899)
+docker run -d -p 8899:8899 ghcr.io/enlivee/mutefeed:latest
+```
+
 ---
 
 ## Table of Contents

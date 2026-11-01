@@ -65,6 +65,7 @@ export interface Translations {
   techDigestSources: string;
   inspectDetails: string;
   hideDetails: string;
+  reportRule: string;
   presetsInfo: Record<string, PresetTranslation>;
   presetBadges: Record<string, string>;
 }
@@ -130,6 +131,7 @@ export const translations: Record<Language, Translations> = {
     techDigestSources: '5 Top Sources Aggregated',
     inspectDetails: 'Inspect filter details ▼',
     hideDetails: 'Hide filter details ▲',
+    reportRule: 'Report / Suggest rule ↗',
     presetsInfo: {
       'paywalls': {
         name: 'Block Paywalls',
@@ -222,6 +224,7 @@ export const translations: Record<Language, Translations> = {
     techDigestSources: '5 топовых источников объединены',
     inspectDetails: 'Подробнее о фильтре ▼',
     hideDetails: 'Скрыть детали ▲',
+    reportRule: 'Сообщить об ошибке ↗',
     presetsInfo: {
       'paywalls': {
         name: 'Блокировка пейволлов',
@@ -314,6 +317,7 @@ export const translations: Record<Language, Translations> = {
     techDigestSources: '汇聚 5 大精选信源',
     inspectDetails: '查看过滤详情 ▼',
     hideDetails: '收起详情 ▲',
+    reportRule: '反馈规则 ↗',
     presetsInfo: {
       'paywalls': {
         name: '拦截付费墙',

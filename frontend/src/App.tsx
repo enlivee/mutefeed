@@ -642,6 +642,14 @@ export default function App() {
                           </svg>
                           <span>{getProminentMuteReason(res.decision, t)}</span>
                         </span>
+                        <a
+                          href="https://github.com/enlivee/mutefeed/issues/new?title=Filter+feedback&labels=filter-rules"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mute-report-link"
+                        >
+                          {t.reportRule}
+                        </a>
                       </div>
                     )}
 

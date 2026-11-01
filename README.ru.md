@@ -30,6 +30,18 @@
 **👉 [mutefeed.onrender.com](https://mutefeed.onrender.com)**  
 *Вставьте ссылку на любой RSS-канал, выберите, что заглушить, и получите чистый поток для NetNewsWire, Feedly или Reeder за 5 секунд. 100% бесплатно, без регистрации и деплоя.*
 
+### ⚡ Быстрый запуск у себя (в 1 команду)
+```bash
+# Способ 1: macOS через Homebrew
+brew install enlivee/tap/mutefeed && mutefeed serve
+
+# Способ 2: Быстрая установка curl (macOS и Linux)
+curl -fsSL https://raw.githubusercontent.com/enlivee/mutefeed/main/install.sh | bash
+
+# Способ 3: Docker (поднимет прокси на localhost:8899)
+docker run -d -p 8899:8899 ghcr.io/enlivee/mutefeed:latest
+```
+
 ---
 
 ## Оглавление
