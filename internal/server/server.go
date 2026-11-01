@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -11,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mmcdole/gofeed"
 	"github.com/stillunbuilt/mutefeed/internal/config"
 	"github.com/stillunbuilt/mutefeed/internal/feed"
 	"github.com/stillunbuilt/mutefeed/internal/filter"
@@ -75,10 +77,14 @@ func (s *Server) Routes() http.Handler {
 	// API endpoints
 	mux.HandleFunc("/api/test", s.handleTest)
 	mux.HandleFunc("/api/presets", s.handlePresets)
+	mux.HandleFunc("/api/bundles", s.handleBundles)
 	mux.HandleFunc("/api/stats", s.handleStats)
 	mux.HandleFunc("/badge", s.handleBadge)
 	mux.HandleFunc("/api/badge", s.handleBadge)
 	mux.HandleFunc("/badge.svg", s.handleBadge)
+
+	// Direct curl install script: curl -fsSL https://mutefeed.onrender.com/install.sh | bash
+	mux.HandleFunc("/install.sh", s.handleInstall)
 
 	// Observability & Health endpoints
 	mux.HandleFunc("/healthz", s.handleHealthz)
@@ -104,6 +110,7 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	bundle := strings.TrimSpace(r.URL.Query().Get("bundle"))
 	feedURL := strings.TrimSpace(r.URL.Query().Get("url"))
 	name := strings.TrimSpace(r.URL.Query().Get("name"))
 
@@ -120,8 +127,8 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 		opts = named.Options
 	}
 
-	if feedURL == "" {
-		http.Error(w, "Missing 'url' or 'name' query parameter", http.StatusBadRequest)
+	if feedURL == "" && bundle == "" {
+		http.Error(w, "Missing 'url', 'bundle', or 'name' query parameter", http.StatusBadRequest)
 		return
 	}
 
@@ -149,10 +156,28 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
 
-	parsedFeed, err := feed.FetchFeed(ctx, feedURL)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to fetch upstream feed: %v", err), http.StatusBadGateway)
-		return
+	var parsedFeed *gofeed.Feed
+	var err error
+	if bundle != "" {
+		var customURLs []string
+		if feedURL != "" {
+			customURLs = append(customURLs, feedURL)
+		}
+		parsedFeed, err = feed.FetchBundle(ctx, bundle, customURLs)
+		if err != nil {
+			if errors.Is(err, feed.ErrBundleNotFound) {
+				http.Error(w, fmt.Sprintf("Bundle %q not found", bundle), http.StatusBadRequest)
+			} else {
+				http.Error(w, fmt.Sprintf("Failed to fetch bundle: %v", err), http.StatusBadGateway)
+			}
+			return
+		}
+	} else {
+		parsedFeed, err = feed.FetchFeed(ctx, feedURL)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to fetch upstream feed: %v", err), http.StatusBadGateway)
+			return
+		}
 	}
 
 	// Filter
@@ -168,6 +193,17 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 		s.metrics.RecordArticleEvaluated()
 		if !dec.Kept {
 			s.metrics.RecordArticleMuted(dec.Preset)
+		}
+	}
+
+	if bundle != "" {
+		for _, item := range kept {
+			if src, ok := item.Custom["source"]; ok && src != "" {
+				pfx := "[" + src + "] "
+				if !strings.HasPrefix(item.Title, pfx) {
+					item.Title = pfx + item.Title
+				}
+			}
 		}
 	}
 
@@ -205,9 +241,10 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	bundle := strings.TrimSpace(r.URL.Query().Get("bundle"))
 	feedURL := strings.TrimSpace(r.URL.Query().Get("url"))
-	if feedURL == "" {
-		s.jsonError(w, "Missing 'url' query parameter", http.StatusBadRequest)
+	if feedURL == "" && bundle == "" {
+		s.jsonError(w, "Missing 'url' or 'bundle' query parameter", http.StatusBadRequest)
 		return
 	}
 
@@ -217,10 +254,28 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
 
-	parsedFeed, err := feed.FetchFeed(ctx, feedURL)
-	if err != nil {
-		s.jsonError(w, fmt.Sprintf("Upstream feed error: %v", err), http.StatusBadGateway)
-		return
+	var parsedFeed *gofeed.Feed
+	var err error
+	if bundle != "" {
+		var customURLs []string
+		if feedURL != "" {
+			customURLs = append(customURLs, feedURL)
+		}
+		parsedFeed, err = feed.FetchBundle(ctx, bundle, customURLs)
+		if err != nil {
+			if errors.Is(err, feed.ErrBundleNotFound) {
+				s.jsonError(w, fmt.Sprintf("Bundle %q not found", bundle), http.StatusBadRequest)
+			} else {
+				s.jsonError(w, fmt.Sprintf("Bundle fetch error: %v", err), http.StatusBadGateway)
+			}
+			return
+		}
+	} else {
+		parsedFeed, err = feed.FetchFeed(ctx, feedURL)
+		if err != nil {
+			s.jsonError(w, fmt.Sprintf("Upstream feed error: %v", err), http.StatusBadGateway)
+			return
+		}
 	}
 
 	engine, err := filter.NewEngine(opts)
@@ -230,11 +285,19 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.metrics.RecordFeedProcessed()
-	_, decisions := engine.FilterFeed(parsedFeed)
+	kept, decisions := engine.FilterFeed(parsedFeed)
 	for _, dec := range decisions {
 		s.metrics.RecordArticleEvaluated()
 		if !dec.Kept {
 			s.metrics.RecordArticleMuted(dec.Preset)
+		}
+	}
+
+	inspectResults := make([]map[string]interface{}, len(decisions))
+	for i, dec := range decisions {
+		inspectResults[i] = map[string]interface{}{
+			"item":     dec.Item,
+			"decision": dec,
 		}
 	}
 
@@ -243,6 +306,9 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
 		"link":        parsedFeed.Link,
 		"description": parsedFeed.Description,
 		"total":       len(parsedFeed.Items),
+		"kept":        len(kept),
+		"muted":       len(parsedFeed.Items) - len(kept),
+		"items":       inspectResults,
 		"decisions":   decisions,
 	}
 
@@ -255,6 +321,13 @@ func (s *Server) handlePresets(w http.ResponseWriter, r *http.Request) {
 	s.metrics.RecordRequest()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(filter.BuiltinPresets)
+}
+
+// handleBundles returns available bundles as JSON
+func (s *Server) handleBundles(w http.ResponseWriter, r *http.Request) {
+	s.metrics.RecordRequest()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(feed.GetBundles())
 }
 
 // handleHealthz returns lightweight JSON uptime and status
@@ -314,6 +387,7 @@ func (s *Server) handleBadge(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "public, max-age=300")
 
 	feedURL := strings.TrimSpace(r.URL.Query().Get("url"))
+	bundle := strings.TrimSpace(r.URL.Query().Get("bundle"))
 	name := strings.TrimSpace(r.URL.Query().Get("name"))
 
 	opts := s.cfg.Defaults
@@ -324,7 +398,7 @@ func (s *Server) handleBadge(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if feedURL == "" {
+	if feedURL == "" && bundle == "" {
 		svg, err := GenerateBadge("mutefeed", "clean", "#2ed573")
 		if err != nil {
 			svg = GenerateErrorBadge()
@@ -356,7 +430,17 @@ func (s *Server) handleBadge(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
 
-	parsedFeed, err := feed.FetchFeed(ctx, feedURL)
+	var parsedFeed *gofeed.Feed
+	var err error
+	if bundle != "" {
+		var customURLs []string
+		if feedURL != "" {
+			customURLs = append(customURLs, feedURL)
+		}
+		parsedFeed, err = feed.FetchBundle(ctx, bundle, customURLs)
+	} else {
+		parsedFeed, err = feed.FetchFeed(ctx, feedURL)
+	}
 	if err != nil {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(GenerateErrorBadge()))

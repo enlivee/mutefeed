@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"flag"
 	"fmt"
 	"log"
@@ -14,6 +15,13 @@ import (
 	"github.com/stillunbuilt/mutefeed/internal/filter"
 	"github.com/stillunbuilt/mutefeed/internal/server"
 )
+
+//go:embed install.sh
+var embeddedInstallScript string
+
+func init() {
+	server.SetInstallScript(embeddedInstallScript)
+}
 
 const version = "1.0.0"
 

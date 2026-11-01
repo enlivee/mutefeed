@@ -519,3 +519,99 @@ func TestCustomKeywordMutingSpecialTopic(t *testing.T) {
 		t.Errorf("expected Reason 'matches custom mute keyword: specialtopic', got %q", blockResp.Decisions[0].Reason)
 	}
 }
+
+func TestInstallScriptEndpoint(t *testing.T) {
+	srv, _ := setupTestServer(t)
+	handler := srv.Routes()
+
+	req := httptest.NewRequest("GET", "/install.sh", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for /install.sh, got %d", w.Code)
+	}
+	if !strings.Contains(w.Header().Get("Content-Type"), "text/plain") && !strings.Contains(w.Header().Get("Content-Type"), "text/x-shellscript") {
+		t.Errorf("expected text/plain content type, got %s", w.Header().Get("Content-Type"))
+	}
+	body := w.Body.String()
+	if !strings.Contains(body, "#!/usr/bin/env bash") {
+		t.Errorf("expected bash shebang in /install.sh, got: %s", body)
+	}
+	if !strings.Contains(body, `REPO="enlivee/mutefeed"`) {
+		t.Errorf("expected REPO=enlivee/mutefeed in /install.sh, got: %s", body)
+	}
+}
+
+func TestBundleEndpoints(t *testing.T) {
+	srv, upstream := setupTestServer(t)
+	handler := srv.Routes()
+
+	// Register a mock bundle for testing
+	feed.RegisterBundle(feed.Bundle{
+		ID:          "testbundle",
+		Name:        "Test Bundle",
+		Description: "Mock Upstream Bundle",
+		URLs:        []string{upstream.URL},
+	})
+
+	// 1. Test /api/test?bundle=testbundle
+	testAPIURL := "/api/test?bundle=testbundle&presets=clickbait"
+	reqAPI := httptest.NewRequest("GET", testAPIURL, nil)
+	wAPI := httptest.NewRecorder()
+	handler.ServeHTTP(wAPI, reqAPI)
+
+	if wAPI.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from /api/test?bundle=testbundle, got %d: %s", wAPI.Code, wAPI.Body.String())
+	}
+
+	var resp struct {
+		Total     int `json:"total"`
+		Kept      int `json:"kept"`
+		Muted     int `json:"muted"`
+		Decisions []struct {
+			Kept   bool   `json:"kept"`
+			Reason string `json:"reason"`
+		} `json:"decisions"`
+		Items []struct {
+			Item struct {
+				Title  string            `json:"title"`
+				Custom map[string]string `json:"custom"`
+			} `json:"item"`
+		} `json:"items"`
+	}
+
+	if err := json.NewDecoder(wAPI.Body).Decode(&resp); err != nil {
+		t.Fatalf("failed to decode bundle test response: %v", err)
+	}
+
+	if resp.Total != 2 {
+		t.Errorf("expected total 2 items in test bundle, got %d", resp.Total)
+	}
+	if resp.Muted != 1 {
+		t.Errorf("expected 1 muted item (clickbait), got %d", resp.Muted)
+	}
+	if resp.Kept != 1 {
+		t.Errorf("expected 1 kept item, got %d", resp.Kept)
+	}
+	if len(resp.Items) != 2 {
+		t.Errorf("expected 2 items, got %d", len(resp.Items))
+	}
+	if resp.Items[0].Item.Custom["source"] != "Mock Feed" {
+		t.Errorf("expected source 'Mock Feed', got %q", resp.Items[0].Item.Custom["source"])
+	}
+
+	// 2. Test /feed?bundle=testbundle
+	feedURL := "/feed?bundle=testbundle&presets=clickbait"
+	reqFeed := httptest.NewRequest("GET", feedURL, nil)
+	wFeed := httptest.NewRecorder()
+	handler.ServeHTTP(wFeed, reqFeed)
+
+	if wFeed.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from /feed?bundle=testbundle, got %d: %s", wFeed.Code, wFeed.Body.String())
+	}
+	feedXML := wFeed.Body.String()
+	if !strings.Contains(feedXML, "[Mock Feed]") {
+		t.Errorf("expected [Mock Feed] tag in RSS title, got:\n%s", feedXML)
+	}
+}

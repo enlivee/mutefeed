@@ -8,6 +8,9 @@ export interface FeedItem {
   author: string;
   guid?: string;
   categories?: string[];
+  source?: string;
+  publication?: string;
+  custom?: Record<string, string>;
 }
 
 export interface Decision {
@@ -23,15 +26,19 @@ export interface InspectResult {
 }
 
 export interface TestResponse {
-  feed: {
+  feed?: {
     title: string;
     description: string;
     link: string;
   };
+  title?: string;
+  description?: string;
+  link?: string;
   total: number;
   kept: number;
   muted: number;
   items: InspectResult[];
+  decisions?: any[];
 }
 
 export interface PresetInfo {

@@ -22,3 +22,8 @@ func Handler() http.Handler {
 func GetIndexHTML() ([]byte, error) {
 	return staticFS.ReadFile("static/index.html")
 }
+
+// GetInstallScript returns install.sh raw bytes
+func GetInstallScript() ([]byte, error) {
+	return staticFS.ReadFile("static/install.sh")
+}

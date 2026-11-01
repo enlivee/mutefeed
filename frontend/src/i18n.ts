@@ -15,6 +15,9 @@ export interface Translations {
   allTab: string;
   mutedTab: string;
   mutedOf: string;
+  of: string;
+  singleMode: string;
+  digestMode: string;
   noiseLevel: string;
   cleanBadge: string;
   mutedBadge: string;
@@ -52,6 +55,9 @@ export const translations: Record<Language, Translations> = {
     allTab: 'All',
     mutedTab: 'Muted',
     mutedOf: 'Muted',
+    of: 'of',
+    singleMode: 'Single Feed',
+    digestMode: '⚡ Clean Tech Digest (Smart Multi-Feed)',
     noiseLevel: 'noise',
     cleanBadge: 'Clean',
     mutedBadge: 'Muted',
@@ -87,6 +93,9 @@ export const translations: Record<Language, Translations> = {
     allTab: 'Все',
     mutedTab: 'Заглушенные',
     mutedOf: 'Заглушено',
+    of: 'из',
+    singleMode: 'Одиночная лента',
+    digestMode: '⚡ Clean Tech Digest (Smart Multi-Feed)',
     noiseLevel: 'шума',
     cleanBadge: 'Чисто',
     mutedBadge: 'Скрыто',
@@ -122,6 +131,9 @@ export const translations: Record<Language, Translations> = {
     allTab: '全部',
     mutedTab: '已屏蔽',
     mutedOf: '已屏蔽',
+    of: '/',
+    singleMode: '单个订阅源',
+    digestMode: '⚡ Clean Tech Digest (Smart Multi-Feed)',
     noiseLevel: '噪音',
     cleanBadge: '纯净',
     mutedBadge: '已过滤',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Language, InspectResult, PresetInfo, TestResponse } from './types';
+import { Language, FeedItem, InspectResult, PresetInfo, TestResponse } from './types';
 import { translations } from './i18n';
 
 const CURATED_FEEDS = [
@@ -7,6 +7,14 @@ const CURATED_FEEDS = [
   { name: 'TechCrunch', url: 'https://techcrunch.com/feed/' },
   { name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml' },
   { name: 'Habr (RU)', url: 'https://habr.com/ru/rss/all/all/' },
+  { name: 'Ars Technica', url: 'https://feeds.arstechnica.com/arstechnica/index' },
+  { name: 'Lobste.rs', url: 'https://lobste.rs/rss' },
+];
+
+const BUNDLE_SOURCES = [
+  { name: 'Hacker News', url: 'https://news.ycombinator.com/rss' },
+  { name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml' },
+  { name: 'TechCrunch', url: 'https://techcrunch.com/feed/' },
   { name: 'Ars Technica', url: 'https://feeds.arstechnica.com/arstechnica/index' },
   { name: 'Lobste.rs', url: 'https://lobste.rs/rss' },
 ];
@@ -34,7 +42,7 @@ const DEFAULT_PRESETS: PresetInfo[] = [
     id: 'sponsored',
     name: 'Sponsored Content',
     description: 'Disguised ads, promoted posts, affiliate marketing roundups',
-    enabled: true,
+    enabled: false,
   },
   {
     id: 'crypto-hype',
@@ -44,8 +52,50 @@ const DEFAULT_PRESETS: PresetInfo[] = [
   },
 ];
 
+function getPublicationTag(item: FeedItem): string {
+  if (item.source) return item.source;
+  if (item.publication) return item.publication;
+  if (item.custom?.source) return item.custom.source;
+  if (item.custom?.publication) return item.custom.publication;
+
+  const link = (item.link || '').toLowerCase();
+  if (link.includes('ycombinator.com') || link.includes('news.ycombinator')) return 'Hacker News';
+  if (link.includes('theverge.com')) return 'The Verge';
+  if (link.includes('techcrunch.com')) return 'TechCrunch';
+  if (link.includes('arstechnica.com')) return 'Ars Technica';
+  if (link.includes('lobste.rs')) return 'Lobste.rs';
+  if (link.includes('habr.com')) return 'Habr';
+
+  if (item.author) {
+    if (/hacker news/i.test(item.author)) return 'Hacker News';
+    if (/the verge|verge/i.test(item.author)) return 'The Verge';
+    if (/techcrunch/i.test(item.author)) return 'TechCrunch';
+    if (/ars technica/i.test(item.author)) return 'Ars Technica';
+    if (/lobste\.rs|lobsters/i.test(item.author)) return 'Lobste.rs';
+  }
+
+  if (item.categories) {
+    for (const cat of item.categories) {
+      if (/hacker news/i.test(cat)) return 'Hacker News';
+      if (/the verge/i.test(cat)) return 'The Verge';
+      if (/techcrunch/i.test(cat)) return 'TechCrunch';
+      if (/ars technica/i.test(cat)) return 'Ars Technica';
+      if (/lobste\.rs|lobsters/i.test(cat)) return 'Lobste.rs';
+    }
+  }
+
+  const titleMatch = (item.title || '').match(/^\[([^\]]+)\]/);
+  if (titleMatch) {
+    return titleMatch[1];
+  }
+
+  return '';
+}
+
 export default function App() {
   const [lang, setLang] = useState<Language>('en');
+  const [mode, setMode] = useState<'single' | 'bundle'>('single');
+  const [bundleId, setBundleId] = useState<string>('tech');
   const [feedUrl, setFeedUrl] = useState('https://news.ycombinator.com/rss');
   const [presets, setPresets] = useState<PresetInfo[]>(DEFAULT_PRESETS);
   const [customKeywords, setCustomKeywords] = useState<string[]>([]);
@@ -66,8 +116,20 @@ export default function App() {
 
   // Dynamic clean feed proxy URL
   const cleanProxyUrl = useMemo(() => {
-    const activePresetIds = presets.filter((p) => p.enabled).map((p) => p.id).join(',');
     const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8899';
+    const activePresetIds = presets.filter((p) => p.enabled).map((p) => p.id).join(',');
+    
+    if (mode === 'bundle') {
+      let url = `${origin}/feed?bundle=${encodeURIComponent(bundleId)}`;
+      if (activePresetIds) {
+        url += `&presets=${encodeURIComponent(activePresetIds)}`;
+      }
+      if (customKeywords.length > 0) {
+        url += `&mute=${encodeURIComponent(customKeywords.join(','))}`;
+      }
+      return url;
+    }
+
     let url = `${origin}/feed?url=${encodeURIComponent(feedUrl)}`;
     if (activePresetIds) {
       url += `&presets=${encodeURIComponent(activePresetIds)}`;
@@ -76,20 +138,34 @@ export default function App() {
       url += `&mute=${encodeURIComponent(customKeywords.join(','))}`;
     }
     return url;
-  }, [feedUrl, presets, customKeywords]);
+  }, [mode, bundleId, feedUrl, presets, customKeywords]);
 
   const openInAppUrl = useMemo(() => {
     return cleanProxyUrl.replace(/^https?:\/\//, 'feed://');
   }, [cleanProxyUrl]);
 
-  // Inspect Feed API
-  const inspectFeed = useCallback(async (urlToInspect: string) => {
-    if (!urlToInspect) return;
+  // Inspect Feed or Bundle API
+  const inspectData = useCallback(async (
+    targetMode: 'single' | 'bundle',
+    targetUrl?: string,
+    targetBundle?: string
+  ) => {
     setLoading(true);
     setError(null);
     try {
       const activePresetIds = presets.filter((p) => p.enabled).map((p) => p.id).join(',');
-      let apiUrl = `/api/test?url=${encodeURIComponent(urlToInspect)}`;
+      let apiUrl = '';
+      if (targetMode === 'bundle') {
+        apiUrl = `/api/test?bundle=${encodeURIComponent(targetBundle || bundleId)}`;
+      } else {
+        const u = targetUrl || feedUrl;
+        if (!u) {
+          setLoading(false);
+          return;
+        }
+        apiUrl = `/api/test?url=${encodeURIComponent(u)}`;
+      }
+
       if (activePresetIds) {
         apiUrl += `&presets=${encodeURIComponent(activePresetIds)}`;
       }
@@ -102,20 +178,55 @@ export default function App() {
         const errText = await res.text();
         throw new Error(errText || `HTTP ${res.status}`);
       }
-      const data: TestResponse = await res.json();
-      setTestData(data);
+      const data = await res.json();
+      
+      const items: InspectResult[] = Array.isArray(data.items)
+        ? data.items
+        : Array.isArray(data.decisions)
+          ? data.decisions.map((d: any) => ({
+              item: d.item || d,
+              decision: {
+                kept: d.kept ?? (d.decision ? d.decision.kept : true),
+                reason: d.reason || d.decision?.reason || '',
+                preset: d.preset || d.decision?.preset || '',
+                details: d.details || d.decision?.details || '',
+              },
+            }))
+          : [];
+
+      const total = typeof data.total === 'number' ? data.total : items.length;
+      const muted = typeof data.muted === 'number' ? data.muted : items.filter((i) => !i.decision?.kept).length;
+      const kept = typeof data.kept === 'number' ? data.kept : Math.max(0, total - muted);
+
+      setTestData({
+        feed: data.feed || { title: data.title || '', description: data.description || '', link: data.link || '' },
+        total,
+        kept,
+        muted,
+        items,
+      });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
-  }, [presets, customKeywords]);
+  }, [presets, customKeywords, bundleId, feedUrl]);
 
   // Initial fetch on mount
   useEffect(() => {
-    inspectFeed(feedUrl);
+    inspectData('single', feedUrl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleModeSwitch = (newMode: 'single' | 'bundle') => {
+    setMode(newMode);
+    if (newMode === 'bundle') {
+      setBundleId('tech');
+      inspectData('bundle', undefined, 'tech');
+    } else {
+      inspectData('single', feedUrl);
+    }
+  };
 
   const handleTogglePreset = (id: string) => {
     setPresets((prev) =>
@@ -154,6 +265,10 @@ export default function App() {
     if (activeTab === 'muted') return testData.items.filter((i) => !i.decision.kept);
     return testData.items;
   }, [testData, activeTab]);
+
+  const noisePercent = testData && testData.total > 0
+    ? Math.round(((testData.muted ?? 0) / testData.total) * 100)
+    : 0;
 
   return (
     <div className="app-container">
@@ -209,42 +324,92 @@ export default function App() {
       <main className="console-grid">
         {/* Left Control Panel */}
         <div className="control-panel">
-          {/* Feed Input Station */}
-          <div className="panel-card">
-            <h2 className="card-title">{t.sourceLabel}</h2>
-            <div className="input-group">
-              <input
-                type="url"
-                className="feed-input"
-                value={feedUrl}
-                onChange={(e) => setFeedUrl(e.target.value)}
-                placeholder={t.sourcePlaceholder}
-                onKeyDown={(e) => e.key === 'Enter' && inspectFeed(feedUrl)}
-              />
+          {/* Segmented Mode Switcher */}
+          <div className="mode-switcher-card">
+            <div className="mode-segmented-control" role="tablist">
               <button
-                className="btn-primary"
-                onClick={() => inspectFeed(feedUrl)}
-                disabled={loading}
+                type="button"
+                className={`mode-segment-btn ${mode === 'single' ? 'active' : ''}`}
+                onClick={() => handleModeSwitch('single')}
               >
-                {loading ? '...' : t.filterBtn}
+                {t.singleMode}
+              </button>
+              <button
+                type="button"
+                className={`mode-segment-btn ${mode === 'bundle' ? 'active' : ''}`}
+                onClick={() => handleModeSwitch('bundle')}
+              >
+                {t.digestMode}
               </button>
             </div>
+          </div>
 
-            <div className="chips-label">Curated Slop-Free Directory:</div>
-            <div className="chips-row">
-              {CURATED_FEEDS.map((feed) => (
+          {/* Feed Input Station */}
+          <div className="panel-card">
+            {mode === 'single' ? (
+              <>
+                <h2 className="card-title">{t.sourceLabel}</h2>
+                <div className="input-group">
+                  <input
+                    type="url"
+                    className="feed-input"
+                    value={feedUrl}
+                    onChange={(e) => setFeedUrl(e.target.value)}
+                    placeholder={t.sourcePlaceholder}
+                    onKeyDown={(e) => e.key === 'Enter' && inspectData('single', feedUrl)}
+                  />
+                  <button
+                    className="btn-primary"
+                    onClick={() => inspectData('single', feedUrl)}
+                    disabled={loading}
+                  >
+                    {loading ? '...' : t.filterBtn}
+                  </button>
+                </div>
+
+                <div className="chips-label">Curated Slop-Free Directory:</div>
+                <div className="chips-row">
+                  {CURATED_FEEDS.map((feed) => (
+                    <button
+                      key={feed.name}
+                      className={`chip-btn ${feedUrl === feed.url ? 'active' : ''}`}
+                      onClick={() => {
+                        setFeedUrl(feed.url);
+                        inspectData('single', feed.url);
+                      }}
+                    >
+                      {feed.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="bundle-active-info">
+                <div className="bundle-title-row">
+                  <span className="bundle-icon">⚡</span>
+                  <div>
+                    <div className="bundle-name">Clean Tech Digest</div>
+                    <div className="bundle-sources-count">5 Top Sources Aggregated</div>
+                  </div>
+                </div>
+                <div className="bundle-sources-pills">
+                  {BUNDLE_SOURCES.map((s) => (
+                    <span key={s.name} className="bundle-source-pill">
+                      [{s.name}]
+                    </span>
+                  ))}
+                </div>
                 <button
-                  key={feed.name}
-                  className={`chip-btn ${feedUrl === feed.url ? 'active' : ''}`}
-                  onClick={() => {
-                    setFeedUrl(feed.url);
-                    inspectFeed(feed.url);
-                  }}
+                  type="button"
+                  className="btn-primary"
+                  style={{ width: '100%', marginTop: '4px' }}
+                  onClick={() => inspectData('bundle', undefined, 'tech')}
+                  disabled={loading}
                 >
-                  {feed.name}
+                  {loading ? '...' : t.filterBtn}
                 </button>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Filter Presets Panel */}
@@ -302,26 +467,26 @@ export default function App() {
           {testData && (
             <div className="stream-header">
               <div className="stream-stats">
-                {t.mutedOf} <strong>{testData.muted}</strong> of <strong>{testData.total}</strong> ({Math.round((testData.muted / (testData.total || 1)) * 100)}% {t.noiseLevel})
+                {t.mutedOf} <strong>{testData.muted ?? 0}</strong> {t.of} <strong>{testData.total ?? 0}</strong> ({noisePercent}% {t.noiseLevel})
               </div>
               <div className="stream-tabs">
                 <button
                   className={`stream-tab ${activeTab === 'all' ? 'active' : ''}`}
                   onClick={() => setActiveTab('all')}
                 >
-                  {t.allTab} ({testData.total})
+                  {t.allTab} ({testData.total ?? 0})
                 </button>
                 <button
                   className={`stream-tab ${activeTab === 'clean' ? 'active' : ''}`}
                   onClick={() => setActiveTab('clean')}
                 >
-                  {t.cleanTab} ({testData.kept})
+                  {t.cleanTab} ({testData.kept ?? 0})
                 </button>
                 <button
                   className={`stream-tab ${activeTab === 'muted' ? 'active' : ''}`}
                   onClick={() => setActiveTab('muted')}
                 >
-                  {t.mutedTab} ({testData.muted})
+                  {t.mutedTab} ({testData.muted ?? 0})
                 </button>
               </div>
             </div>
@@ -348,12 +513,28 @@ export default function App() {
               {filteredItems.map((res: InspectResult, idx: number) => {
                 const domain = res.item.link ? new URL(res.item.link).hostname.replace('www.', '') : '';
                 const isExpanded = !!expandedIndices[idx];
+                const publication = getPublicationTag(res.item);
+                const escapedPub = publication.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const displayTitle = publication
+                  ? (res.item.title || '(Untitled)').replace(new RegExp(`^\\s*\\[${escapedPub}\\]\\s*`, 'i'), '')
+                  : (res.item.title || '(Untitled)');
+
                 return (
                   <div key={idx} className={`article-card ${!res.decision.kept ? 'muted' : ''}`}>
                     <div className="article-header">
-                      <a href={res.item.link} target="_blank" rel="noopener noreferrer" className="article-title">
-                        {res.item.title || '(Untitled)'}
-                      </a>
+                      <div className="article-title-wrap">
+                        {publication && (
+                          <span className="publication-tag">[{publication}]</span>
+                        )}
+                        <a
+                          href={res.item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="article-title"
+                        >
+                          {displayTitle}
+                        </a>
+                      </div>
                       <span className={`status-tag ${res.decision.kept ? 'clean' : 'muted'}`}>
                         {res.decision.kept ? t.cleanBadge : (res.decision.preset || t.mutedBadge)}
                       </span>
@@ -364,7 +545,7 @@ export default function App() {
                       {res.item.published && <span>{new Date(res.item.published).toLocaleDateString()}</span>}
                       {!res.decision.kept && (
                         <button
-                          style={{ color: 'var(--accent)', cursor: 'pointer', fontSize: 11 }}
+                          style={{ color: 'var(--accent)', cursor: 'pointer', fontSize: 12 }}
                           onClick={() => toggleExpand(idx)}
                         >
                           {isExpanded ? 'Hide filter details ▲' : 'Inspect filter details ▼'}
@@ -411,9 +592,9 @@ export default function App() {
             </button>
             <a href={openInAppUrl} className="btn-secondary">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
               {t.openApp}
             </a>
@@ -436,18 +617,23 @@ export default function App() {
 
             <div style={{ textAlign: 'center', marginBottom: 20 }}>
               <img
-                src={`/badge?url=${encodeURIComponent(feedUrl)}`}
+                src={mode === 'bundle' ? `/badge?bundle=${encodeURIComponent(bundleId)}` : `/badge?url=${encodeURIComponent(feedUrl)}`}
                 alt="MuteFeed Live Purity Badge"
                 style={{ height: 28 }}
               />
             </div>
 
             <div className="code-box">
-              <code>{`[![MuteFeed Clean](${window.location.origin}/badge?url=${encodeURIComponent(feedUrl)})](${window.location.origin})`}</code>
+              <code>{mode === 'bundle'
+                ? `[![MuteFeed Clean](${window.location.origin}/badge?bundle=${encodeURIComponent(bundleId)})](${window.location.origin})`
+                : `[![MuteFeed Clean](${window.location.origin}/badge?url=${encodeURIComponent(feedUrl)})](${window.location.origin})`}</code>
               <button
                 className="tool-btn"
                 onClick={() => {
-                  navigator.clipboard.writeText(`[![MuteFeed Clean](${window.location.origin}/badge?url=${encodeURIComponent(feedUrl)})](${window.location.origin})`);
+                  const badgeSnippet = mode === 'bundle'
+                    ? `[![MuteFeed Clean](${window.location.origin}/badge?bundle=${encodeURIComponent(bundleId)})](${window.location.origin})`
+                    : `[![MuteFeed Clean](${window.location.origin}/badge?url=${encodeURIComponent(feedUrl)})](${window.location.origin})`;
+                  navigator.clipboard.writeText(badgeSnippet);
                   setBadgeCopied(true);
                   setTimeout(() => setBadgeCopied(false), 2000);
                 }}
