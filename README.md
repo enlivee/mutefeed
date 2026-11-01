@@ -39,14 +39,9 @@
 - [Architecture & Request Lifecycle](#architecture--request-lifecycle)
 - [Presets & Multilingual Heuristics](#presets--multilingual-heuristics)
 - [Performance Benchmarks](#performance-benchmarks)
-- [Self-Hosting & Deployment (Optional for Developers)](#self-hosting--deployment-optional-for-developers)
-  - [1-Click Cloud Deploy (Render)](#1-click-cloud-deploy-render)
-  - [Docker & Docker Compose](#docker--docker-compose)
-  - [Homebrew (macOS / Linux)](#homebrew-macos--linux)
-  - [Go Install](#go-install)
-  - [Pre-compiled Binaries](#pre-compiled-binaries)
 - [CLI Reference](#cli-reference)
 - [API Reference](#api-reference)
+- [Self-Hosting (Optional)](#self-hosting-optional)
 - [Configuration (`config.yaml`)](#configuration-configyaml)
 - [OPML Batch Migration](#opml-batch-migration)
 - [Observability & Health Checks](#observability--health-checks)
@@ -252,77 +247,16 @@ MuteFeed is stress-tested under high concurrency (100,000 HTTP requests simulati
 
 ---
 
-## Self-Hosting & Deployment (Optional for Developers)
+## Self-Hosting (Optional)
 
-> [!NOTE]
-> **Zero setup required for regular use**: You do **not** need to deploy or host MuteFeed yourself! The public web instance at **[mutefeed.onrender.com](https://mutefeed.onrender.com)** is free, persistent, zero-log, and requires zero installation.
-> 
-> Self-hosting is completely optional for developers who prefer running their own private daemon or intranet node.
+MuteFeed is a public web service at **[mutefeed.onrender.com](https://mutefeed.onrender.com)**. You do **not** need to deploy or host it yourself.
 
-### 1-Click Cloud Deploy (Render)
-
-Deploy your own private MuteFeed instance to Render in under 60 seconds with no configuration needed:
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/enlivee/mutefeed)
-
-### Docker & Docker Compose
-
-Run the official lightweight Alpine container:
-
-```bash
-docker run -d \
-  --name mutefeed \
-  -p 8899:8899 \
-  --restart unless-stopped \
-  ghcr.io/enlivee/mutefeed:latest
-```
-
-Or deploy using `docker-compose.yml`:
-
-```yaml
-services:
-  mutefeed:
-    image: ghcr.io/enlivee/mutefeed:latest
-    container_name: mutefeed
-    ports:
-      - "8899:8899"
-    environment:
-      - PORT=8899
-      - HOST=0.0.0.0
-    restart: unless-stopped
-```
-
-### Homebrew (macOS / Linux)
-
-```bash
-# Install via tap
-brew tap enlivee/tap
-brew install mutefeed
-
-# Run as a background service managed by launchd / systemd
-brew services start mutefeed
-```
-
-### Go Install
-
-```bash
-go install github.com/stillunbuilt/mutefeed@latest
-```
-
-### Pre-compiled Binaries
-
-Download pre-compiled binaries from the [Releases page](https://github.com/enlivee/mutefeed/releases):
-- `mutefeed_darwin_arm64.tar.gz` (Apple Silicon)
-- `mutefeed_darwin_amd64.tar.gz` (Intel macOS)
-- `mutefeed_linux_amd64.tar.gz` (Linux x86_64)
-- `mutefeed_linux_arm64.tar.gz` (Linux ARM64 / Raspberry Pi)
-- `mutefeed_windows_amd64.zip` (Windows x64)
-
-Or install via one-line shell script:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/enlivee/mutefeed/main/install.sh | bash
-```
+For developers and system administrators who wish to run a private instance, local background daemon, or intranet node, full instructions are available in the **[Self-Hosting Guide](docs/SELF_HOSTING.md)**:
+- [Docker & Docker Compose](docs/SELF_HOSTING.md#docker--docker-compose)
+- [Homebrew Service (`brew install mutefeed`)](docs/SELF_HOSTING.md#homebrew-service-macos--linux)
+- [Pre-compiled Binaries & Go Install](docs/SELF_HOSTING.md#pre-compiled-binaries)
+- [Private 1-Click Cloud Deploy](docs/SELF_HOSTING.md#1-click-cloud-deploy-render)
+- [Custom Configuration (`config.yaml`)](docs/SELF_HOSTING.md#configuration-configyaml)
 
 ---
 
