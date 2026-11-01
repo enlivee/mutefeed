@@ -114,6 +114,8 @@ export default function App() {
   const [badgeCopied, setBadgeCopied] = useState(false);
   const [modalCopied, setModalCopied] = useState(false);
   const [desktopLaunched, setDesktopLaunched] = useState(false);
+  const [donateModalOpen, setDonateModalOpen] = useState(false);
+  const [cryptoCopied, setCryptoCopied] = useState(false);
 
   const t = translations[lang];
 
@@ -323,6 +325,11 @@ export default function App() {
             {t.opmlBtn}
           </button>
 
+          <button className="tool-btn" onClick={() => setDonateModalOpen(true)}>
+            <span>☕</span>
+            {t.donateBtn}
+          </button>
+
           <div className="status-pill">
             <span className="status-dot"></span>
             <span>Online</span>
@@ -377,7 +384,7 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="chips-label">Curated Slop-Free Directory:</div>
+                <div className="chips-label">{t.curatedDirectoryLabel}</div>
                 <div className="chips-row">
                   {CURATED_FEEDS.map((feed) => (
                     <button
@@ -398,8 +405,8 @@ export default function App() {
                 <div className="bundle-title-row">
                   <span className="bundle-icon">⚡</span>
                   <div>
-                    <div className="bundle-name">Clean Tech Digest</div>
-                    <div className="bundle-sources-count">5 Top Sources Aggregated</div>
+                    <div className="bundle-name">{t.techDigestTitle}</div>
+                    <div className="bundle-sources-count">{t.techDigestSources}</div>
                   </div>
                 </div>
                 <div className="bundle-sources-pills">
@@ -426,23 +433,28 @@ export default function App() {
           <div className="panel-card">
             <h2 className="card-title">{t.presetsTitle}</h2>
             <div className="toggles-list">
-              {presets.map((preset) => (
-                <div
-                  key={preset.id}
-                  className="toggle-row"
-                  onClick={() => handleTogglePreset(preset.id)}
-                >
-                  <div className="toggle-info">
-                    <div className="toggle-title-row">
-                      <span className="toggle-name">{preset.name}</span>
+              {presets.map((preset) => {
+                const info = t.presetsInfo[preset.id];
+                const displayName = info?.name || preset.name;
+                const displayDesc = info?.description || preset.description;
+                return (
+                  <div
+                    key={preset.id}
+                    className="toggle-row"
+                    onClick={() => handleTogglePreset(preset.id)}
+                  >
+                    <div className="toggle-info">
+                      <div className="toggle-title-row">
+                        <span className="toggle-name">{displayName}</span>
+                      </div>
+                      <span className="toggle-desc">{displayDesc}</span>
                     </div>
-                    <span className="toggle-desc">{preset.description}</span>
+                    <div className={`switch ${preset.enabled ? 'checked' : ''}`}>
+                      <div className="switch-thumb"></div>
+                    </div>
                   </div>
-                  <div className={`switch ${preset.enabled ? 'checked' : ''}`}>
-                    <div className="switch-thumb"></div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -546,7 +558,9 @@ export default function App() {
                         </a>
                       </div>
                       <span className={`status-tag ${res.decision.kept ? 'clean' : 'muted'}`}>
-                        {res.decision.kept ? t.cleanBadge : (res.decision.preset || t.mutedBadge)}
+                        {res.decision.kept
+                          ? t.cleanBadge
+                          : (t.presetBadges[res.decision.preset] || res.decision.preset || t.mutedBadge)}
                       </span>
                     </div>
 
@@ -558,7 +572,7 @@ export default function App() {
                           style={{ color: 'var(--accent)', cursor: 'pointer', fontSize: 12 }}
                           onClick={() => toggleExpand(idx)}
                         >
-                          {isExpanded ? 'Hide filter details ▲' : 'Inspect filter details ▼'}
+                          {isExpanded ? t.hideDetails : t.inspectDetails}
                         </button>
                       )}
                     </div>
@@ -781,6 +795,88 @@ export default function App() {
                   }}
                 >
                   {modalCopied ? t.copied : t.copyUrl}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Donation Modal */}
+      {donateModalOpen && (
+        <div className="modal-overlay" onClick={() => setDonateModalOpen(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">{t.donateModalTitle}</h2>
+              <span className="modal-close" onClick={() => setDonateModalOpen(false)}>✕</span>
+            </div>
+            <p className="modal-desc">{t.donateModalDesc}</p>
+
+            <div className="reader-options-list">
+              {/* Buy Me a Coffee */}
+              <a
+                className="reader-option-row"
+                href="https://buymeacoffee.com/enlivee"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="reader-option-content">
+                  <div className="reader-option-title">
+                    <span>☕</span> {t.donateBmac}
+                  </div>
+                  <div className="reader-option-desc">{t.donateBmacHint}</div>
+                </div>
+                <span className="reader-option-tag">Donate ↗</span>
+              </a>
+
+              {/* Boosty */}
+              <a
+                className="reader-option-row"
+                href="https://boosty.to/enlivee"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="reader-option-content">
+                  <div className="reader-option-title">
+                    <span>💳</span> {t.donateBoosty}
+                  </div>
+                  <div className="reader-option-desc">{t.donateBoostyHint}</div>
+                </div>
+                <span className="reader-option-tag">Support ↗</span>
+              </a>
+
+              {/* Star on GitHub */}
+              <a
+                className="reader-option-row"
+                href="https://github.com/enlivee/mutefeed"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="reader-option-content">
+                  <div className="reader-option-title">
+                    <span>⭐</span> {t.donateStar}
+                  </div>
+                  <div className="reader-option-desc">{t.donateStarHint}</div>
+                </div>
+                <span className="reader-option-tag">Star ⭐</span>
+              </a>
+            </div>
+
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                {t.donateCrypto} — {t.donateCryptoHint}
+              </div>
+              <div className="code-box">
+                <code>TYDny3Vb2N1s3v9kC7gRzX4YJ8LwMqeF2A</code>
+                <button
+                  className="tool-btn"
+                  onClick={() => {
+                    navigator.clipboard.writeText('TYDny3Vb2N1s3v9kC7gRzX4YJ8LwMqeF2A');
+                    setCryptoCopied(true);
+                    setTimeout(() => setCryptoCopied(false), 2000);
+                  }}
+                >
+                  {cryptoCopied ? t.copied : t.copyUrl}
                 </button>
               </div>
             </div>

@@ -1,5 +1,9 @@
 # MuteFeed
 
+<p align="center">
+  <b>English</b> · <a href="README.ru.md">Русский</a>
+</p>
+
 ```text
   __  __       _       ______            _ 
  |  \/  |     | |     |  ____|          | |
@@ -465,6 +469,17 @@ go vet ./...
 - [ ] Visual custom regex rule builder in the web dashboard
 - [ ] WebSub / PubSubHubbub push notifications for real-time feed updates
 - [ ] Full-text article content extraction fallback for truncated feeds
+
+---
+
+## ☕ Support the Author
+
+MuteFeed is a free, open-source labor of love. If it saves your time, filters the noise, and protects your attention, you can support its creator and ongoing development:
+
+- ☕ **Buy Me a Coffee**: [buymeacoffee.com/enlivee](https://buymeacoffee.com/enlivee) (Cards, Apple Pay, Google Pay)
+- 💳 **Boosty**: [boosty.to/enlivee](https://boosty.to/enlivee) (Russian & international cards, СБП)
+- 💎 **USDT / Crypto (TRC20)**: `TYDny3Vb2N1s3v9kC7gRzX4YJ8LwMqeF2A`
+- ⭐ **Star on GitHub**: Give a star to [enlivee/mutefeed](https://github.com/enlivee/mutefeed) — it's free and greatly helps discoverability!
 
 ---
 

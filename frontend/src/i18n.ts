@@ -1,9 +1,15 @@
 import { Language } from './types';
 
+export interface PresetTranslation {
+  name: string;
+  description: string;
+}
+
 export interface Translations {
   tagline: string;
   badgeBtn: string;
   opmlBtn: string;
+  donateBtn: string;
   sourceLabel: string;
   sourcePlaceholder: string;
   filterBtn: string;
@@ -46,6 +52,23 @@ export interface Translations {
   inoreaderWeb: string;
   inoreaderHint: string;
   manualReaderHint: string;
+  donateModalTitle: string;
+  donateModalDesc: string;
+  donateBmac: string;
+  donateBmacHint: string;
+  donateBoosty: string;
+  donateBoostyHint: string;
+  donateCrypto: string;
+  donateCryptoHint: string;
+  donateStar: string;
+  donateStarHint: string;
+  curatedDirectoryLabel: string;
+  techDigestTitle: string;
+  techDigestSources: string;
+  inspectDetails: string;
+  hideDetails: string;
+  presetsInfo: Record<string, PresetTranslation>;
+  presetBadges: Record<string, string>;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -53,6 +76,7 @@ export const translations: Record<Language, Translations> = {
     tagline: 'Quiet, clean, AI-slop-free RSS feeds',
     badgeBtn: 'Embed Badge',
     opmlBtn: 'Batch OPML',
+    donateBtn: 'Support Author',
     sourceLabel: 'Feed Source',
     sourcePlaceholder: 'https://example.com/rss',
     filterBtn: 'Filter',
@@ -70,7 +94,7 @@ export const translations: Record<Language, Translations> = {
     noiseLevel: 'noise',
     cleanBadge: 'Clean',
     mutedBadge: 'Muted',
-    emptyTitle: 'No feed loaded',
+    emptyTitle: 'No feed loaded yet',
     emptyDesc: 'Enter an RSS feed URL or click an example above to inspect live noise filtering.',
     dockTitle: 'Subscribe in your RSS Reader:',
     dockHint: 'Paste this link into NetNewsWire, Feedly, or Reeder',
@@ -95,11 +119,56 @@ export const translations: Record<Language, Translations> = {
     inoreaderWeb: 'Inoreader (Web)',
     inoreaderHint: 'Open and subscribe in Inoreader',
     manualReaderHint: 'For Miniflux, FreshRSS, Thunderbird, or any other reader, copy the clean URL below:',
+    donateModalTitle: 'Support the Creator',
+    donateModalDesc: 'MuteFeed is a free, open-source passion project. If it saves your attention from noise and clickbait, you can support further development:',
+    donateBmac: 'Buy Me a Coffee',
+    donateBmacHint: 'Global cards, Apple Pay & Google Pay',
+    donateBoosty: 'Boosty / СБП / Cards',
+    donateBoostyHint: 'Convenient for Russian & international cards',
+    donateCrypto: 'USDT / Crypto (TRC20)',
+    donateCryptoHint: 'Zero-commission direct transfer',
+    donateStar: 'Star on GitHub',
+    donateStarHint: 'Free and greatly helps discoverability',
+    curatedDirectoryLabel: 'Curated Slop-Free Directory:',
+    techDigestTitle: 'Clean Tech Digest',
+    techDigestSources: '5 Top Sources Aggregated',
+    inspectDetails: 'Inspect filter details ▼',
+    hideDetails: 'Hide filter details ▲',
+    presetsInfo: {
+      'paywalls': {
+        name: 'Block Paywalls',
+        description: 'WSJ, Bloomberg, FT, Caixin, Vedomosti, Forbes, Wired, Medium',
+      },
+      'ai-slop': {
+        name: 'Filter AI Slop',
+        description: 'LLM boilerplate, corporate jargon, and synthetic text cliches',
+      },
+      'clickbait': {
+        name: 'Clickbait & Ragebait',
+        description: 'Sensationalist titles, curiosity gaps, ALL CAPS shouting',
+      },
+      'sponsored': {
+        name: 'Sponsored Content',
+        description: 'Disguised ads, promoted posts, affiliate marketing roundups',
+      },
+      'crypto-hype': {
+        name: 'Crypto & Web3 Hype',
+        description: 'Memecoin speculation, NFT airdrops, and token shills',
+      },
+    },
+    presetBadges: {
+      'paywalls': 'Paywall',
+      'ai-slop': 'AI Slop',
+      'clickbait': 'Clickbait',
+      'sponsored': 'Sponsored',
+      'crypto-hype': 'Crypto',
+    },
   },
   ru: {
     tagline: 'Тихие, чистые RSS-ленты без нейрослопа и кликбейта',
     badgeBtn: 'Бейдж чистоты',
     opmlBtn: 'Пакетный OPML',
+    donateBtn: 'Поддержать автора',
     sourceLabel: 'Источник ленты',
     sourcePlaceholder: 'https://example.com/rss',
     filterBtn: 'Фильтровать',
@@ -113,7 +182,7 @@ export const translations: Record<Language, Translations> = {
     mutedOf: 'Заглушено',
     of: 'из',
     singleMode: 'Одиночная лента',
-    digestMode: '⚡ Clean Tech Digest (Smart Multi-Feed)',
+    digestMode: '⚡ Чистый IT-дайджест (Мульти-лента)',
     noiseLevel: 'шума',
     cleanBadge: 'Чисто',
     mutedBadge: 'Скрыто',
@@ -142,11 +211,56 @@ export const translations: Record<Language, Translations> = {
     inoreaderWeb: 'Inoreader (Веб)',
     inoreaderHint: 'Открыть и добавить ленту в аккаунт Inoreader',
     manualReaderHint: 'Для Miniflux, FreshRSS, Thunderbird и других ридеров скопируйте чистый URL ниже:',
+    donateModalTitle: 'Поддержать автора проекта',
+    donateModalDesc: 'MuteFeed — бесплатный проект с открытым исходным кодом. Если сервис бережёт ваше внимание и время от кликбейта и слопа — поддержите его автора:',
+    donateBmac: 'Buy Me a Coffee',
+    donateBmacHint: 'Зарубежные карты, Apple Pay & Google Pay',
+    donateBoosty: 'Boosty / СБП / Карты РФ',
+    donateBoostyHint: 'Удобно для карт любых российских банков',
+    donateCrypto: 'USDT / Крипта (TRC20)',
+    donateCryptoHint: 'Прямой перевод без посредников и комиссий',
+    donateStar: 'Поставить звезду на GitHub',
+    donateStarHint: 'Бесплатно и очень помогает продвижению проекта',
+    curatedDirectoryLabel: 'Проверенные ленты без спама:',
+    techDigestTitle: 'Чистый IT-дайджест',
+    techDigestSources: '5 топовых источников объединены',
+    inspectDetails: 'Подробнее о фильтре ▼',
+    hideDetails: 'Скрыть детали ▲',
+    presetsInfo: {
+      'paywalls': {
+        name: 'Блокировка пейволлов',
+        description: 'Ведомости, Forbes, Medium, WSJ, Bloomberg, FT, Wired',
+      },
+      'ai-slop': {
+        name: 'Фильтр нейрослопа',
+        description: 'Шаблоны ChatGPT, корпоративный буллшит и синтетическая вода',
+      },
+      'clickbait': {
+        name: 'Кликбейт и рейджбейт',
+        description: 'Сенсационные заголовки, манипуляции эмоциями, КАПСЛОК',
+      },
+      'sponsored': {
+        name: 'Рекламный контент',
+        description: 'Скрытая реклама, промо-посты, партнерские ссылки',
+      },
+      'crypto-hype': {
+        name: 'Крипта и Web3-хайп',
+        description: 'Спекуляции мемкоинами, аирдропы токенов и шиллинг',
+      },
+    },
+    presetBadges: {
+      'paywalls': 'Пейволл',
+      'ai-slop': 'Нейрослоп',
+      'clickbait': 'Кликбейт',
+      'sponsored': 'Реклама',
+      'crypto-hype': 'Крипта',
+    },
   },
   zh: {
     tagline: '安静、纯净、无 AI 废话的 RSS 订阅源',
     badgeBtn: '嵌入徽章',
     opmlBtn: '批量 OPML',
+    donateBtn: '支持作者',
     sourceLabel: '订阅源地址',
     sourcePlaceholder: 'https://example.com/rss',
     filterBtn: '过滤',
@@ -160,7 +274,7 @@ export const translations: Record<Language, Translations> = {
     mutedOf: '已屏蔽',
     of: '/',
     singleMode: '单个订阅源',
-    digestMode: '⚡ Clean Tech Digest (Smart Multi-Feed)',
+    digestMode: '⚡ 纯净科技简报 (聚合流)',
     noiseLevel: '噪音',
     cleanBadge: '纯净',
     mutedBadge: '已过滤',
@@ -189,5 +303,49 @@ export const translations: Record<Language, Translations> = {
     inoreaderWeb: 'Inoreader (网页版)',
     inoreaderHint: '打开并添加到 Inoreader 账号',
     manualReaderHint: '对于 Miniflux、FreshRSS、Thunderbird 等其他阅读器，请直接复制下方链接：',
+    donateModalTitle: '支持项目作者',
+    donateModalDesc: 'MuteFeed 是一个自由开源的项目。如果它帮您过滤了噪音并节省了宝贵的时间，欢迎支持持续开发：',
+    donateBmac: 'Buy Me a Coffee',
+    donateBmacHint: '国际信用卡、Apple Pay 与 Google Pay',
+    donateBoosty: 'Boosty / 银联 / 银行卡',
+    donateBoostyHint: '支持多种支付方式',
+    donateCrypto: 'USDT / 加密货币 (TRC20)',
+    donateCryptoHint: '零手续费直接转账',
+    donateStar: '在 GitHub 上点亮 Star',
+    donateStarHint: '免费且能极大帮助项目被更多人看见',
+    curatedDirectoryLabel: '精选无水文订阅源：',
+    techDigestTitle: '纯净科技简报',
+    techDigestSources: '汇聚 5 大精选信源',
+    inspectDetails: '查看过滤详情 ▼',
+    hideDetails: '收起详情 ▲',
+    presetsInfo: {
+      'paywalls': {
+        name: '拦截付费墙',
+        description: '屏蔽 WSJ、Bloomberg、FT、财新、Medium 等付费限制',
+      },
+      'ai-slop': {
+        name: '过滤 AI 废话',
+        description: '大模型套话、企业黑话与毫无实质的合成水文',
+      },
+      'clickbait': {
+        name: '标题党与引战内容',
+        description: '夸张标题、制造信息差、全大写情绪煽动',
+      },
+      'sponsored': {
+        name: '赞助推广内容',
+        description: '伪装成文章的硬广、推广帖及返利汇总',
+      },
+      'crypto-hype': {
+        name: '加密货币与炒作',
+        description: 'Meme 币投机、NFT 空投以及代币喊单',
+      },
+    },
+    presetBadges: {
+      'paywalls': '付费墙',
+      'ai-slop': 'AI 废话',
+      'clickbait': '标题党',
+      'sponsored': '推广',
+      'crypto-hype': '炒作',
+    },
   },
 };

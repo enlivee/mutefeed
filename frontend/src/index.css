@@ -12,8 +12,8 @@
   --border-focus: #4F596B;
 
   --text: #F0F3F7;
-  --text-muted: #9EABB9;
-  --text-faint: #637083;
+  --text-muted: #A3B1C2;
+  --text-faint: #8E9CAE;
 
   --accent: #E5853C;
   --accent-hover: #F09A55;
@@ -343,6 +343,11 @@ button, input {
   border-color: var(--accent);
 }
 
+::placeholder {
+  color: #8E9CAE !important;
+  opacity: 1 !important;
+}
+
 .btn-primary {
   padding: 10px 16px;
   background: var(--accent);
@@ -393,27 +398,35 @@ button, input {
   color: var(--accent);
 }
 
-/* Filter Toggles */
+/* Filter Toggles - Flat Hierarchy to prevent visual noise */
 .toggles-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 
 .toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  padding: 11px 4px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition: background 0.15s ease;
+}
+
+.toggle-row:first-child {
+  padding-top: 2px;
+}
+
+.toggle-row:last-child {
+  border-bottom: none;
+  padding-bottom: 2px;
 }
 
 .toggle-row:hover {
-  border-color: var(--border-focus);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .toggle-info {
