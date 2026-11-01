@@ -86,7 +86,18 @@ else
     echo "=> Pre-built binary release download not available, attempting go install..."
     if command -v go >/dev/null 2>&1; then
         go install "github.com/$REPO@latest"
-        echo "=> Installed via go install!"
+        GOBIN="$(go env GOBIN 2>/dev/null)"
+        if [ -z "$GOBIN" ]; then
+            GOPATH="$(go env GOPATH 2>/dev/null)"
+            GOBIN="${GOPATH:-$HOME/go}/bin"
+        fi
+        if [ -f "$GOBIN/$BINARY" ]; then
+            cp "$GOBIN/$BINARY" "$INSTALL_DIR/$BINARY"
+            chmod +x "$INSTALL_DIR/$BINARY"
+            echo "=> Successfully installed MuteFeed to $INSTALL_DIR/$BINARY"
+        else
+            echo "=> Installed via go install into $GOBIN/$BINARY"
+        fi
     else
         echo "=> Error: Could not download pre-built binary and Go compiler is not installed."
         echo "   Please download manually from https://github.com/$REPO/releases or install Go."
