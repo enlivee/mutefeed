@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/mmcdole/gofeed"
-	"github.com/stillunbuilt/mutefeed/internal/feed"
+	"github.com/enlivee/mutefeed/internal/feed"
 )
 
 // FetchBundle retrieves and aggregates all feeds in a bundle concurrently.

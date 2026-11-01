@@ -9,8 +9,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/stillunbuilt/mutefeed/internal/config"
-	"github.com/stillunbuilt/mutefeed/internal/feed"
+	"github.com/enlivee/mutefeed/internal/config"
+	"github.com/enlivee/mutefeed/internal/feed"
 )
 
 const mockFeedXML = `<?xml version="1.0" encoding="UTF-8"?>

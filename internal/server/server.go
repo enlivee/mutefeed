@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/mmcdole/gofeed"
-	"github.com/stillunbuilt/mutefeed/internal/config"
-	"github.com/stillunbuilt/mutefeed/internal/feed"
-	"github.com/stillunbuilt/mutefeed/internal/filter"
-	"github.com/stillunbuilt/mutefeed/internal/web"
+	"github.com/enlivee/mutefeed/internal/config"
+	"github.com/enlivee/mutefeed/internal/feed"
+	"github.com/enlivee/mutefeed/internal/filter"
+	"github.com/enlivee/mutefeed/internal/web"
 )
 
 type cachedFeed struct {

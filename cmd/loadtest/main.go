@@ -16,9 +16,9 @@ import (
 	"time"
 
 	"github.com/mmcdole/gofeed"
-	"github.com/stillunbuilt/mutefeed/internal/config"
-	"github.com/stillunbuilt/mutefeed/internal/feed"
-	"github.com/stillunbuilt/mutefeed/internal/server"
+	"github.com/enlivee/mutefeed/internal/config"
+	"github.com/enlivee/mutefeed/internal/feed"
+	"github.com/enlivee/mutefeed/internal/server"
 )
 
 func generateBenchmarkFeed() (*gofeed.Feed, string) {

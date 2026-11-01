@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/stillunbuilt/mutefeed/internal/feed"
+	"github.com/enlivee/mutefeed/internal/feed"
 )
 
 func TestAPIBundles(t *testing.T) {

@@ -1,4 +1,4 @@
-module github.com/stillunbuilt/mutefeed
+module github.com/enlivee/mutefeed
 
 go 1.25.0
 

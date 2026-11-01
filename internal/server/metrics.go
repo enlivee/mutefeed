@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/stillunbuilt/mutefeed/internal/feed"
+	"github.com/enlivee/mutefeed/internal/feed"
 )
 
 // Metrics manages real-time performance and filtering statistics

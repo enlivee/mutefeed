@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/stillunbuilt/mutefeed/internal/web"
+	"github.com/enlivee/mutefeed/internal/web"
 )
 
 var defaultInstallScript = `#!/usr/bin/env bash

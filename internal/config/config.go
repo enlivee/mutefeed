@@ -3,7 +3,7 @@ package config
 import (
 	"os"
 
-	"github.com/stillunbuilt/mutefeed/internal/filter"
+	"github.com/enlivee/mutefeed/internal/filter"
 	"gopkg.in/yaml.v3"
 )
 
